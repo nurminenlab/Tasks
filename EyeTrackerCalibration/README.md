@@ -1,1 +1,1 @@
-Routines to calibrate the eye tracker.
+Routines for eye-tracker calibration.
