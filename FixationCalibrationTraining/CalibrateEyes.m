@@ -5,8 +5,9 @@ close all;
 clear;
 
 % user defined parameters
-scaler = 0.5;
+scaler = 2.5;
 stimulus_duration = 2;
+reward_size_time = 0.2;
 
 % set-up Datapixx
 Datapixx('Open');
@@ -78,24 +79,23 @@ imageTexture = Screen('MakeTexture', window, theImage);
 
 tr_ind = 0;
 tr = struct();
-while 1
-  tr_ind = tr_ind + 1;
+while 1  
   [secs, keyCode, deltaSecs] = KbStrokeWait;
   if KbName(keyCode) == '7'        
     pos = 1;
-    stim = 'left-bottom';
+    stim = 'left-top';
     [rect_center_X,rect_center_Y] = RectCenter(rects(:,:,pos));
   elseif KbName(keyCode) == '4'
     pos = 2;
-    stim = 'center-bottom';
+    stim = 'left-center';
     [rect_center_X,rect_center_Y] = RectCenter(rects(:,:,pos));
   elseif KbName(keyCode) == '1'
     pos = 3;
-    stim = 'right-bottom';
+    stim = 'left-bottom';
     [rect_center_X,rect_center_Y] = RectCenter(rects(:,:,pos));
   elseif KbName(keyCode) == '8'
     pos = 4;
-    stim = 'left-center';
+    stim = 'center-top';
     [rect_center_X,rect_center_Y] = RectCenter(rects(:,:,pos));
   elseif KbName(keyCode) == '5'
     pos = 5;
@@ -103,19 +103,19 @@ while 1
     [rect_center_X,rect_center_Y] = RectCenter(rects(:,:,pos));
   elseif KbName(keyCode) == '2'
     pos = 6;
-    stim = 'right-center';
+    stim = 'center-bottom';
     [rect_center_X,rect_center_Y] = RectCenter(rects(:,:,pos));
   elseif KbName(keyCode) == '9'
     pos = 7;
-    stim = 'left-top';
+    stim = 'right-top';
     [rect_center_X,rect_center_Y] = RectCenter(rects(:,:,pos));
   elseif KbName(keyCode) == '6'
     pos = 8;
-    stim = 'center-top';
+    stim = 'right-center';
     [rect_center_X,rect_center_Y] = RectCenter(rects(:,:,pos));
   elseif KbName(keyCode) == '3'
     pos = 9;
-    stim = 'right-top';
+    stim = 'right-bottom';
     [rect_center_X,rect_center_Y] = RectCenter(rects(:,:,pos));
   elseif KbName(keyCode) == 'q'
     break;
@@ -130,13 +130,14 @@ while 1
   Datapixx('StartAdcSchedule')
   Datapixx('RegWrRd');
   vbl = Screen('Flip', window);
-  Screen('FillRect', window, grey, rects(:,:,pos));
-  Screen('Flip', window, vbl + stimulus_duration,0,1);
+  Screen('FillRect', window, grey, rects(:,:,pos));  
+  flipped = 0;
   tic();
   while toc() < stimulus_duration;
     [keyIsDown, secs, keyCode, deltaSecs] = KbCheck();
     if keyIsDown && KbName(keyCode) == 'space';
-      
+      Screen('Flip', window);
+      flipped = 1;     
       % Wait for the ADC to finish acquiring its scheduled dataset
       while 1
         Datapixx('RegWrRd');   % Update registers for GetAdcStatus
@@ -150,18 +151,47 @@ while 1
       fprintf('juice');
       Datapixx('RegWrRd');
       [adcData, adcTimetags] = Datapixx('ReadAdcBuffer', nAdcSamples);      
+      
+      # turn pump on
+      Datapixx('SetDoutValues', 1);
+      Datapixx('RegWrRd');
+      a = tic();
+      while toc(a) < reward_size_time
+        # pump juice
+      end
+      # turn pump off
+      Datapixx('SetDoutValues', 0);
+      Datapixx('RegWrRd');
+      
       plot(adcTimetags, adcData(1,:)./max(abs(adcData(1,:))),'r-');
       hold on;
       plot(adcTimetags, adcData(2,:)./max(abs(adcData(2,:))),'b-');      
-      [X,Y,B] = ginput(2);
-      t = find(adcTimetags >= X(1) & adcTimetags <= X(2));      
-      tr(tr_ind) = struct('stimulus', stim, "H_voltage", adcData(1,:), "V_voltage", adcData(2,:), ...
-                    "H_voltage_median", median(adcData(1,t)), "V_voltage_median", median(adcData(2,t)), ...
-                    "rect_center_X", rect_center_X, "rect_center_Y", rect_center_Y);            
+      
+      wait_user = 1;
+      while wait_user
+        [secs, keyCode, deltaSecs] = KbStrokeWait;
+        if KbName(keyCode) == 'g'
+          tr_ind = tr_ind + 1;
+          [X,Y,B] = ginput(2);
+          t = find(adcTimetags >= X(1) & adcTimetags <= X(2));      
+          tr(tr_ind) = struct('stimulus', stim, "H_voltage", adcData(1,:), "V_voltage", adcData(2,:), ...
+                        "H_voltage_median", median(adcData(1,t)), "V_voltage_median", median(adcData(2,t)), ...
+                        "rect_center_X", rect_center_X, "rect_center_Y", rect_center_Y);            
+          wait_user = 0;
+        elseif KbName(keyCode) == 'b'  
+          wait_user = 0;
+        else
+        end                  
+      end                
       close;
       break;
     end
   end  
+  
+  if flipped == 0
+    Screen('Flip', window);
+  end  
+  
 end
 
 % Clear the screen

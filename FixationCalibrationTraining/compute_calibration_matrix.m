@@ -1,4 +1,4 @@
-function [bx, by] = compute_calibration_matrix(tr)
+function [bx, by, HV, VV, HP,VP] = compute_calibration_matrix(tr)
   H_voltage = nan * ones(size(tr));
   H_pixels  = nan * ones(size(tr));
   V_voltage = nan * ones(size(tr));
@@ -19,4 +19,8 @@ function [bx, by] = compute_calibration_matrix(tr)
   bx = H_voltage\H_pixels';
   by = V_voltage\V_pixels';  
   
+  HV = H_voltage(:,2);
+  VV = V_voltage(:,2);  
+  HP = H_pixels;
+  VP = V_pixels;
 end
