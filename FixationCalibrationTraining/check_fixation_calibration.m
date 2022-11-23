@@ -1,1 +1,0 @@
-# load fixation calibration[FNAME, FPATH, FLTIDX] = uigetfile('*.mat');load([FPATH,FNAME]);[bx,by, HV, VV, HP, VP] = compute_calibration_matrix(tr);Scale_mx = eye(2);Scale_mx(1) = bx(2);Scale_mx(4) = by(2);Trans_mx = [bx(1), by(1)]';

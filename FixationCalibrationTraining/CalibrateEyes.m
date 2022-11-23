@@ -5,7 +5,7 @@ close all;
 clear;
 
 % user defined parameters
-scaler = 2.5;
+scaler = 1.2;
 stimulus_duration = 2;
 reward_size_time = 0.2;
 
@@ -117,6 +117,8 @@ while 1
     pos = 9;
     stim = 'right-bottom';
     [rect_center_X,rect_center_Y] = RectCenter(rects(:,:,pos));
+  elseif KbName(keyCode) == 'p'
+    compute_calibration_matrix(tr,1);
   elseif KbName(keyCode) == 'q'
     break;
   else

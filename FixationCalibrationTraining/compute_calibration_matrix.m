@@ -1,4 +1,4 @@
-function [bx, by, HV, VV, HP,VP] = compute_calibration_matrix(tr)
+function [bx, by, HV, VV, HP,VP] = compute_calibration_matrix(tr, plot_yes)
   H_voltage = nan * ones(size(tr));
   H_pixels  = nan * ones(size(tr));
   V_voltage = nan * ones(size(tr));
@@ -22,5 +22,24 @@ function [bx, by, HV, VV, HP,VP] = compute_calibration_matrix(tr)
   HV = H_voltage(:,2);
   VV = V_voltage(:,2);  
   HP = H_pixels;
-  VP = V_pixels;
+  VP = V_pixels; 
+ 
+  
+  if plot_yes == 1
+    hf1 = figure(1);
+    hold on     
+    XX = linspace(min(HV), max(HV),4);
+    plot(HV, HP,'ko')
+    plot(XX,bx(1) + bx(2)*XX,'k-')
+    
+    hf2 = figure(2);
+    hold on 
+    YY = linspace(min(VV), max(VV),4);
+    plot(VV, VP,'ko')        
+    plot(YY,by(1) + by(2)*YY,'k-')
+    
+    KbStrokeWait();
+    close(hf1);
+    close(hf2);    
+  endif
 end
