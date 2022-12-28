@@ -1,35 +1,46 @@
 % prepare PsychoToolbox
+addpath('/home/vpixx/Tasks/Functions/');
 AssertOpenGL;
 sca;
 close all;
 clear;
 
+# use mouse instead of eye tracker
+mouse_track = 1;
+
 on_target = 0;
 
 % user defined parameters
-scaler = 1.55;
+scaler = 1.1;
 wait_fixation = 4;
 rewardConsume_period = 2;
-max_fixation_time = 20;
+max_fixation_time = 4;
 ms = 10;
-min_target_time = 0.1;
+min_target_time = 0.15;
+max_trs = 10000;
 
-% set-up Datapixx
-Datapixx('Open')
+if != mouse_track
+  % set-up Datapixx
+  Datapixx('Open')
+end
+
 adcRate = 1e3;
 baseBuffAddr = 0;
 %nAdcSamples = floor((wait_fixation + rewardConsume_period + max_fixation_time) * adcRate);
 minStreamFrames = 15;
 
 trackMarkerColor = [255,0,0];
-# load fixation calibration
-[FNAME, FPATH, FLTIDX] = uigetfile();
-load([FPATH,FNAME]);
-[bx,by, HV, VV, HP, VP] = compute_calibration_matrix(tr,1);
-Scale_mx = eye(2);
-Scale_mx(1) = bx(2);
-Scale_mx(4) = by(2);
-Trans_mx = [bx(1), by(1)]';
+
+if != mouse_track
+  # load fixation calibrationscreenXpixels/2
+  [FNAME, FPATH, FLTIDX] = uigetfile();
+  load([FPATH,FNAME]);
+  [bx,by, HV, VV, HP, VP] = compute_calibration_matrix(tr,1);
+  Scale_mx = eye(2);
+  Scale_mx(1) = bx(2);
+  Scale_mx(4) = by(2);
+  Trans_mx = [bx(1), by(1)]';
+end
 
 % Here we call some default settings for setting up Psychtoolbox
 PsychDefaultSetup(2);
@@ -45,25 +56,32 @@ stimulus_screenNumber = max(screens);
 % Define black and white
 white = WhiteIndex(stimulus_screenNumber);
 black = BlackIndex(stimulus_screenNumber);
-grey = white / 2;
+grey = 128;
 inc = white - grey;
 
 % Open an on screen window
-[stimulus_window, stimulus_windowRect] = PsychImaging('OpenWindow', stimulus_screenNumber, grey);
-[eyeTrack_window, eyeTrack_windowRect] = PsychImaging('OpenWindow', eyeTrack_screenNumber, grey);
+#[stimulus_window, stimulus_windowRect] = PsychImaging('OpenWindow', stimulus_screenNumber, grey);
+#[eyeTrack_window, eyeTrack_windowRect] = PsychImaging('OpenWindow', eyeTrack_screenNumber, grey);
+stimulus_window = Screen('OpenWindow',stimulus_screenNumber,128);
+eyeTrack_window = Screen('OpenWindow',eyeTrack_screenNumber,128);
+
+gridSize = 128;
+orientations = [0,90];
+pixelsPerPeriod = 33;
+plateauCycles = 3;
+edgeCycles = 0.25;
+contrast = 0.3
+windowPointer = stimulus_window;
 
 % Get the size of the on screen window, these are the same for both screens
-[screenXpixels, screenYpixels] = Screen('WindowSize', stimulus_window);
-
-% Get the centre coordinate of the window
-[xCenter, yCenter] = RectCenter(stimulus_windowRect);
+[screenXpixels, screenYpixels] = Screen('WindowSize',stimulus_window);
 
 % Set up alpha-blending for smooth (anti-aliased) lines
-Screen('BlendFunction', stimulus_window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
-Screen('BlendFunction', eyeTrack_window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
+#Screen('BlendFunction', stimulus_window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
+#Screen('BlendFunction', eyeTrack_window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
 
 % Load marmoset face
-stimulus_image = 'face10.jpg';
+stimulus_image = 'face8.jpg';
 theImage = imread(stimulus_image);
 [s1, s2, s3] = size(theImage);
 
@@ -71,8 +89,8 @@ theImage = imread(stimulus_image);
 trackWin_factor = 1.3;
 rect = [0 0 s1*scaler s2*scaler];
 eyePos_rect = [0 0 5 5];
-trackWindow_rect = [0 0 193 193];
-trackWindow = 193/2;
+trackWindow_rect = [0 0 s1*scaler*trackWin_factor s2*scaler*trackWin_factor];
+trackWindow = s1*scaler*trackWin_factor/2;
 
 idx = 0;
 XBC = [screenXpixels/2-125, screenXpixels/2, screenXpixels/2 + 125];
@@ -84,15 +102,19 @@ for i = 1:numel(X);
   trackWindow_rect(:,:,i) = CenterRectOnPoint(trackWindow_rect, X(i), Y(i));
 end
 
+grating_rect = [0 0 gridSize gridSize];
+grating_rect = CenterRectOnPoint(grating_rect,screenXpixels/2-135,screenYpixels/2+135);
+
 % Make the image into a texture
 stimulus_imageTexture = Screen('MakeTexture', stimulus_window, theImage);
 eyeTrack_imageTexture = Screen('MakeTexture', eyeTrack_window, theImage);
+grText = generate_grating_textures(gridSize,orientations,pixelsPerPeriod,plateauCycles,edgeCycles,windowPointer,stimulus_screenNumber,contrast);
 
 tr_ind = 0;
 tr = struct();
 #conditions = ['1','2','3','4','5','6','7','8','9'];
-conditions = ['4','5','6','8','2'];
-#conditions = ['5'];
+#conditions = ['4','5','6','8','2'];
+conditions = ['5'];
 is_running = 1;
 
 KbStrokeWait();
@@ -102,6 +124,7 @@ Datapixx('RegWrRd');
 # to force correct baseBuffAddr
 XY = Datapixx('ReadAdcBuffer', 1, baseBuffAddr);
 Datapixx('RegWrRd');
+
 while is_running
   tr_ind = tr_ind + 1;
   %eyePos_rect = CenterRectOnPoint(eyePos_rect, 960, 540-150);
@@ -145,9 +168,10 @@ while is_running
   
   % Grey screen
   Screen('FillRect', stimulus_window, grey, rects(:,:,pos));  
-  Screen('FillRect', eyeTrack_window, grey, rects(:,:,pos));
+  Screen('FillRect', stimulus_window, grey, grating_rect);
+  Screen('FillRect', eyeTrack_window, grey, rects(:,:,pos));  
   greyScreen_stimulus_vbl = Screen('Flip', stimulus_window);
-  greyScreen_eyeTrack_vbl = Screen('Flip', eyeTrack_window,0,1);   
+  greyScreen_eyeTrack_vbl = Screen('Flip', eyeTrack_window,0,1);
   
   tic();
   while toc() < rewardConsume_period;
@@ -176,13 +200,13 @@ while is_running
       break;
     end
   end  %
-    hold on 
+    
   % Draw monkey face
-  Screen('DrawTexture', stimulus_window, stimulus_imageTexture, [], rects(:,:,pos), 0);
-  Screen('DrawTexture', eyeTrack_window, eyeTrack_imageTexture, [], rects(:,:,pos), 0);  
+  Screen('DrawTexture', stimulus_window, stimulus_imageTexture, [], rects(:,:,pos));  
+  Screen('DrawTexture', eyeTrack_window, eyeTrack_imageTexture, [], rects(:,:,pos));    
   % Draw fixation window
   Screen('FrameOval',eyeTrack_window, [0 0 255], trackWindow_rect(:,:,pos), 3,3);
-  stimulusScreen_stimulus_vbl = Screen('Flip', stimulus_window, greyScreen_stimulus_vbl + rewardConsume_period);
+  stimulusScreen_stimulus_vbl = Screen('Flip', stimulus_window, greyScreen_stimulus_vbl + rewardConsume_period,1);
   stimulusScreen_eyeTrack_vbl = Screen('Flip', eyeTrack_window, greyScreen_eyeTrack_vbl + rewardConsume_period,1);
   
   wait_fixation_clock = tic();
@@ -202,6 +226,9 @@ while is_running
       on_target = 1;
       reaction_time = toc(wait_fixation_clock);
       eyeTrack_clock = tic();      
+      Screen('DrawTexture', stimulus_window, grText(randi(2)),[],grating_rect);      
+      Screen('Flip', stimulus_window, greyScreen_stimulus_vbl + rewardConsume_period);
+      fprintf('Pylly\n')
       break;
     end
       
@@ -296,6 +323,11 @@ while is_running
   trial_records(tr_ind).reaction_time  = reaction_time;
   trial_records(tr_ind).on_target_time = on_target_time; 
   trial_records(tr_ind).trial_error = trial_error; 
+  
+  if tr_ind >= max_trs
+    is_running = 0;
+    sca;
+  end
   
 end
 

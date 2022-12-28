@@ -5,7 +5,7 @@ close all;
 clear;
 
 % user defined parameters
-scaler = 1.2;
+scaler = 1.55;
 stimulus_duration = 2;
 reward_size_time = 0.2;
 
@@ -62,7 +62,7 @@ ifi = Screen('GetFlipInterval', window);
 Screen('BlendFunction', window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
 
 % Load marmoset face
-theImage = imread('face8.jpg');
+theImage = imread('face10.jpg');
 [s1, s2, s3] = size(theImage);
 
 % scale image rectangle
