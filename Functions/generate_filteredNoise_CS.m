@@ -1,4 +1,4 @@
-function [grText] = generate_filteredNoise(gridSize,windowPointer,parameters)
+function [grText_CS,grText_S,grText_CS_iTrack,grText_S_iTrack] = generate_filteredNoise(gridSize,windowPointer,iTrack_windowPointer,parameters)
   
 addpath('/home/vpixx/Tasks/Functions/');
 echo off
@@ -17,6 +17,7 @@ surround_noise_patch = 2.*rand(gridSize,gridSize) -1;
 surround_ftd = surround_filter.*fftshift(fft2(surround_noise_patch));
 surround_noise = real(ifft2(ifftshift(surround_ftd)));
 surround_noise = surround_noise./max(abs(min(min(surround_noise))),max(max(surround_noise)));
+surround_noise_woHole = surround_noise.*parameters.contrast_S.*raisedCosineMask;
 surround_noise = surround_noise.*parameters.contrast_S;
 surround_noise = surround_noise.*raisedCosineMask.*raisedCosineMask_annulus;
 
@@ -27,7 +28,9 @@ center_noise = real(ifft2(ifftshift(center_ftd)));
 center_noise = center_noise./max(abs(min(min(center_noise))),max(max(center_noise)));
 center_noise = center_noise.*parameters.contrast_C;
 center_noise = center_noise.*raisedCosineMask_center;
-grayScaleImageMatrix = center_noise + surround_noise;
+
+grayScaleImageMatrix_CS = center_noise + surround_noise;
+grayScaleImageMatrix_S  = surround_noise_woHole;
 
 black = BlackIndex(windowPointer);  
 white = WhiteIndex(windowPointer);  
@@ -37,5 +40,11 @@ if round(gray)==white
 end
 
 absoluteDifferenceBetweenWhiteAndGray = abs(white - gray);
-grayScaleImageMatrix = gray + absoluteDifferenceBetweenWhiteAndGray.*grayScaleImageMatrix;
-grText = Screen('MakeTexture', windowPointer, grayScaleImageMatrix);
+grayScaleImageMatrix_CS = gray + absoluteDifferenceBetweenWhiteAndGray.*grayScaleImageMatrix_CS;
+grayScaleImageMatrix_S  = gray + absoluteDifferenceBetweenWhiteAndGray.*grayScaleImageMatrix_S;
+
+grText_CS = Screen('MakeTexture', windowPointer, grayScaleImageMatrix_CS);
+grText_S  = Screen('MakeTexture', windowPointer, grayScaleImageMatrix_S);
+
+grText_CS_iTrack = Screen('MakeTexture', iTrack_windowPointer, grayScaleImageMatrix_CS);
+grText_S_iTrack  = Screen('MakeTexture', iTrack_windowPointer, grayScaleImageMatrix_S);

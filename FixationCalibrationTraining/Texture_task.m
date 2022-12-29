@@ -19,11 +19,11 @@ ms = 10;
 min_target_time = 0.15;
 max_trs = 10000;
 
-if != mouse_track
-  % set-up Datapixx
-  Datapixx('Open')
+if mouse_track
+  XY = ones(2,1)*nan;
 end
 
+Datapixx('Open')
 adcRate = 1e3;
 baseBuffAddr = 0;
 %nAdcSamples = floor((wait_fixation + rewardConsume_period + max_fixation_time) * adcRate);
@@ -31,7 +31,7 @@ minStreamFrames = 15;
 
 trackMarkerColor = [255,0,0];
 
-if != mouse_track
+if ~mouse_track
   # load fixation calibrationscreenXpixels/2
   [FNAME, FPATH, FLTIDX] = uigetfile();
   load([FPATH,FNAME]);
@@ -108,7 +108,38 @@ grating_rect = CenterRectOnPoint(grating_rect,screenXpixels/2-135,screenYpixels/
 % Make the image into a texture
 stimulus_imageTexture = Screen('MakeTexture', stimulus_window, theImage);
 eyeTrack_imageTexture = Screen('MakeTexture', eyeTrack_window, theImage);
-grText = generate_grating_textures(gridSize,orientations,pixelsPerPeriod,plateauCycles,edgeCycles,windowPointer,stimulus_screenNumber,contrast);
+
+gridSize = 256;
+parameters.lowCut_S  = 0.01;
+parameters.highCut_S = 0.05;
+parameters.orientation_low_S  = 0;
+parameters.orientation_high_S = 90;
+parameters.plateauPixels_S = 200;
+parameters.edgePixels_S = 20;
+parameters.contrast_S = 0.5;
+
+parameters.lowCut_C  = 0.2;
+parameters.highCut_C = 0.25;
+parameters.orientation_low_C  = 135-25;
+parameters.orientation_high_C = 135+25;
+parameters.orientations_C = [0,90];
+parameters.plateauPixels_C = 100;
+parameters.edgePixels_C = 1;
+parameters.contrast_C = 0.5;
+
+txt_rect = [1 1 gridSize gridSize];
+txt_rect = CenterRectOnPoint(txt_rect, screenXpixels/2, screenYpixels/2);
+txt_rects  = nan * ones(4,4);
+thetas = deg2rad([-45,45,135,225]);
+R = 200;
+[Xoff, Yoff] = pol2cart(thetas,R);
+for i = 1:length(Xoff)
+  txt_rects(:,i) = round(CenterRectOnPoint(txt_rect, screenXpixels/2+Xoff(i), screenYpixels/2+Yoff(i)));
+end
+
+[grText_CS,grText_S,grText_CS_iTrack,grText_S_iTrack] = generate_filteredNoise_CS(gridSize,stimulus_window,eyeTrack_window,parameters);
+grText        = [repmat(grText_S,1,3),grText_CS];
+grText_iTrack = [repmat(grText_S_iTrack,1,3),grText_CS_iTrack];
 
 tr_ind = 0;
 tr = struct();
@@ -118,12 +149,14 @@ conditions = ['5'];
 is_running = 1;
 
 KbStrokeWait();
-Datapixx('SetAdcSchedule',0,adcRate,0,[0 2],baseBuffAddr,adcRate);
-Datapixx('StartAdcSchedule');
-Datapixx('RegWrRd');
-# to force correct baseBuffAddr
-XY = Datapixx('ReadAdcBuffer', 1, baseBuffAddr);
-Datapixx('RegWrRd');
+if ~mouse_track
+  Datapixx('SetAdcSchedule',0,adcRate,0,[0 2],baseBuffAddr,adcRate);
+  Datapixx('StartAdcSchedule');
+  Datapixx('RegWrRd');
+  # to force correct baseBuffAddr
+  XY = Datapixx('ReadAdcBuffer', 1, baseBuffAddr);
+  Datapixx('RegWrRd');
+end
 
 while is_running
   tr_ind = tr_ind + 1;
@@ -171,22 +204,28 @@ while is_running
   Screen('FillRect', stimulus_window, grey, grating_rect);
   Screen('FillRect', eyeTrack_window, grey, rects(:,:,pos));  
   greyScreen_stimulus_vbl = Screen('Flip', stimulus_window);
-  greyScreen_eyeTrack_vbl = Screen('Flip', eyeTrack_window,0,1);
+  #greyScreen_eyeTrack_vbl = Screen('Flip', eyeTrack_window,0,1);
+  greyScreen_eyeTrack_vbl = Screen('Flip', eyeTrack_window);
   
   tic();
   while toc() < rewardConsume_period;
-    [keyIsDown, secs, keyCode, deltaSecs] = KbCheck();                    
+      [keyIsDown, secs, keyCode, deltaSecs] = KbCheck();                    
+      if ~mouse_track
+        Datapixx('RegWrRd');
+        status = Datapixx('GetAdcStatus');
+        nReadFrames = status.newBufferFrames;   
+        if (nReadFrames < minStreamFrames)
+          continue;
+        else        
+          XY = median(Datapixx('ReadAdcBuffer', nReadFrames, -1),2);         
+          XY = Scale_mx*XY + Trans_mx;
+        end
+      else
+        [x,y,buttons,focus] = GetMouse(eyeTrack_window);
+        XY(1) = x;
+        XY(2) = y;
+      end      
       
-      Datapixx('RegWrRd');
-      status = Datapixx('GetAdcStatus');
-      nReadFrames = status.newBufferFrames;   
-      if (nReadFrames < minStreamFrames)
-        continue;
-      else        
-        XY = median(Datapixx('ReadAdcBuffer', nReadFrames, -1),2);         
-        XY = Scale_mx*XY + Trans_mx;
-      end
-             
       eyePos_rect = CenterRectOnPoint(eyePos_rect,XY(1),XY(2));
       Screen('FillOval', eyeTrack_window, trackMarkerColor, eyePos_rect);      
       Screen('Flip', eyeTrack_window,0,1);    
@@ -211,24 +250,31 @@ while is_running
   
   wait_fixation_clock = tic();
   while toc(wait_fixation_clock) < wait_fixation;    
-         
-    Datapixx('RegWrRd');
-    status = Datapixx('GetAdcStatus');%PsychDebugWindowConfiguration;
-    nReadFrames = status.newBufferFrames;   
-    if (nReadFrames < minStreamFrames)
-      continue;
-    else      
-      XY = median(Datapixx('ReadAdcBuffer', nReadFrames, -1),2);         
-      XY = Scale_mx*XY + Trans_mx;
-    end   
+    
+    if ~mouse_track
+      Datapixx('RegWrRd');
+      status = Datapixx('GetAdcStatus');
+      nReadFrames = status.newBufferFrames;   
+      if (nReadFrames < minStreamFrames)
+        continue;
+      else      
+        XY = median(Datapixx('ReadAdcBuffer', nReadFrames, -1),2);         
+        XY = Scale_mx*XY + Trans_mx;
+      end   
+    else
+      [x,y,buttons,focus] = GetMouse(eyeTrack_window);
+      XY(1) = x;
+      XY(2) = y;
+    end           
     
     if sqrt((XY(1) - X(pos))^2 + (XY(2) - Y(pos))^2) < trackWindow
       on_target = 1;
       reaction_time = toc(wait_fixation_clock);
       eyeTrack_clock = tic();      
-      Screen('DrawTexture', stimulus_window, grText(randi(2)),[],grating_rect);      
-      Screen('Flip', stimulus_window, greyScreen_stimulus_vbl + rewardConsume_period);
-      fprintf('Pylly\n')
+      Screen('DrawTextures', stimulus_window, grText,[],txt_rects);      
+      Screen('DrawTextures', eyeTrack_window, grText_iTrack,[],txt_rects);
+      Screen('Flip', stimulus_window, greyScreen_stimulus_vbl + rewardConsume_period);     
+      Screen('Flip', eyeTrack_window, greyScreen_stimulus_vbl + rewardConsume_period,1);
       break;
     end
       
@@ -244,15 +290,21 @@ while is_running
 
   while on_target;     
     
-    Datapixx('RegWrRd');
-    status = Datapixx('GetAdcStatus');
-    nReadFrames = status.newBufferFrames;   
-    if (nReadFrames < minStreamFrames)
-      continue;
+    if ~mouse_track
+      Datapixx('RegWrRd');
+      status = Datapixx('GetAdcStatus');
+      nReadFrames = status.newBufferFrames;   
+      if (nReadFrames < minStreamFrames)
+        continue;
+      else
+        XY = median(Datapixx('ReadAdcBuffer', nReadFrames, -1),2);         
+        XY = Scale_mx*XY + Trans_mx;
+      end
     else
-      XY = median(Datapixx('ReadAdcBuffer', nReadFrames, -1),2);         
-      XY = Scale_mx*XY + Trans_mx;
-    end
+      [x,y,buttons,focus] = GetMouse(eyeTrack_window);
+      XY(1) = x;
+      XY(2) = y;
+    end      
     
     if sqrt((XY(1) - X(pos))^2 + (XY(2) - Y(pos))^2) >= trackWindow
       on_target = 0;
@@ -314,7 +366,6 @@ while is_running
       sca;
       break;
   end
-
  
   % record trial data
   trial_records(tr_ind).stimulus = stimulus_image;

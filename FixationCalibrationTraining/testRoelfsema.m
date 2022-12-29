@@ -37,9 +37,8 @@ parameters.edgePixels_C = 1;
 parameters.contrast_C = 0.5;
 
 
-#[grText] = generate_filteredNoise_CS(gridSize,stimulus_window,parameters);
-[grText] = generate_filteredNoise(gridSize,stimulus_window,parameters);
-
+[grText_CS,grText_S] = generate_filteredNoise_CS(gridSize,stimulus_window,parameters);
+#[grText] = generate_filteredNoise(gridSize,stimulus_window,parameters);
 
 rect = [0 0 gridSize gridSize];
 rect = CenterRectOnPoint(rect, screenXpixels/2, screenYpixels/2);
@@ -51,7 +50,7 @@ for i = 1:length(Xoff)
   rects(:,i) = round(CenterRectOnPoint(rect, screenXpixels/2+Xoff(i), screenYpixels/2+Yoff(i)));
 end
 
-
+grText = [repmat(grText_S,1,3),grText_CS];
 Screen('DrawTextures', stimulus_window, grText, [], rects);
 Screen('Flip', stimulus_window);
 KbWait();
