@@ -30,12 +30,18 @@ function [bx, by, HV, VV, HP,VP] = compute_calibration_matrix(tr, plot_yes)
     hold on     
     XX = linspace(min(HV), max(HV),4);
     plot(HV, HP,'ko')
+    for i = 1:length(tr)      
+      text(tr(i).H_voltage_median, tr(i).rect_center_X,num2str(i),'FontSize',16,'Color','red')
+    end    
     plot(XX,bx(1) + bx(2)*XX,'k-')
     
     hf2 = figure(2);
     hold on 
     YY = linspace(min(VV), max(VV),4);
-    plot(VV, VP,'ko')        
+    plot(VV, VP,'ko')
+    for i = 1:length(tr)
+      text(tr(i).V_voltage_median, tr(i).rect_center_Y,num2str(i),'FontSize',16,'Color','red')
+    end    
     plot(YY,by(1) + by(2)*YY,'k-')
     
     KbStrokeWait();

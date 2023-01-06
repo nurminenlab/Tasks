@@ -7,12 +7,12 @@ clear;
 on_target = 0;
 
 % user defined parameters
-scaler = 1.55;
+scaler = 1.15;
 wait_fixation = 4;
 rewardConsume_period = 2;
 max_fixation_time = 20;
 ms = 10;
-min_target_time = 0.1;
+min_target_time = 0.2;
 
 % set-up Datapixx
 Datapixx('Open')
@@ -63,16 +63,16 @@ Screen('BlendFunction', stimulus_window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA
 Screen('BlendFunction', eyeTrack_window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
 
 % Load marmoset face
-stimulus_image = 'face10.jpg';
+stimulus_image = 'face8.jpg';
 theImage = imread(stimulus_image);
 [s1, s2, s3] = size(theImage);
 
 % scale image rectangle
-trackWin_factor = 1.3;
+trackWin_factor = 1.25;
 rect = [0 0 s1*scaler s2*scaler];
 eyePos_rect = [0 0 5 5];
-trackWindow_rect = [0 0 193 193];
-trackWindow = 193/2;
+trackWindow_rect = [0 0 s1*scaler*trackWin_factor s1*scaler*trackWin_factor];
+trackWindow = s1*scaler*trackWin_factor/2;
 
 idx = 0;
 XBC = [screenXpixels/2-125, screenXpixels/2, screenXpixels/2 + 125];
@@ -258,7 +258,7 @@ while is_running
       Datapixx('SetDoutValues', 1);
       Datapixx('RegWrRd');
       a = tic();
-      reward_size_time = 0.3*sqrt((on_target_time));
+      reward_size_time = 0.4*sqrt((on_target_time));
       while toc(a) < reward_size_time
          # pump juice
       end

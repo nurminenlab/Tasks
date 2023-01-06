@@ -12,11 +12,6 @@ isi_duration = 10;
 reward_size_time = 0.2;
 inter_juice_time = 1-reward_size_time;
 
-% set-up Datapixx
-##Datapixx('Open');
-##Datapixx('StopAllSchedules');
-##Datapixx('DisableDacAdcLoopback');
-##Datapixx('RegWrRd');
 
 % allocate space for acquiring eye-tracker voltages
 x_center = nan*ones(1,40);
