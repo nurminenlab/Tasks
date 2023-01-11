@@ -8,7 +8,7 @@ clear;
 on_target = 0;
 
 % user defined parameters
-scaler = 1.4;
+scaler = 1.15;
 wait_fixation = 4;
 rewardConsume_period = 2;
 max_fixation_time = 4;

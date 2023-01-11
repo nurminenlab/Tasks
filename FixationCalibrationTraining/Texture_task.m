@@ -19,6 +19,7 @@ min_target_time      = 0.5;
 max_trs              = 10000;
 response_wait_min    = 0.125;
 response_wait_max    = 1;
+gaze_move_time       = 1;
 
 gridSize = 256;
 parameters.lowCut_S  = 0.01;
@@ -27,7 +28,7 @@ parameters.orientation_low_S  = 0;
 parameters.orientation_high_S = 90;
 parameters.plateauPixels_S = 200;
 parameters.edgePixels_S = 20;
-parameters.contrast_S = 0.05;
+parameters.contrast_S = 0.5;
 
 parameters.lowCut_C  = 0.2;
 parameters.highCut_C = 0.25;
@@ -36,7 +37,7 @@ parameters.orientation_high_C = 135+25;
 parameters.orientations_C = [0,90];
 parameters.plateauPixels_C = 100;
 parameters.edgePixels_C = 1;
-parameters.contrast_C = 0.5;
+parameters.contrast_C = 1;
 
 thetas = deg2rad([-45,45,135,225]);
 R      = 200;
@@ -131,7 +132,7 @@ target_Windowrect = CenterRectOnPoint(target_Windowrect,screenXpixels/2, screenY
 
 txt_rect = [1 1 gridSize gridSize];
 txt_rect = CenterRectOnPoint(txt_rect, screenXpixels/2, screenYpixels/2);
-txt_rects  = nan * ones(4,length(thetas)*length(R);
+txt_rects  = nan * ones(4,length(thetas)*length(R));
 
 [Xoff, Yoff] = pol2cart(thetas,R);
 for i = 1:length(Xoff)
@@ -178,8 +179,16 @@ while is_running
   greyScreen_eyeTrack_vbl = Screen('Flip', eyeTrack_window);  
   
   target_Windowrect = round(CenterRectOnPoint(target_Windowrect, screenXpixels/2+Xoff(target_pos), screenYpixels/2+Yoff(target_pos)));
-  target_pos_X = screenXpixels/2+Xoff(target_pos);
+  target_pos_X = screenXpixels/2+Xoff(target_pos);  
   target_pos_Y = screenYpixels/2+Yoff(target_pos); 
+  
+  not_target_Xoff = Xoff;
+  not_target_Xoff(target_pos) = [];  
+  not_target_pos_X = screenXpixels/2+not_target_Xoff;
+  
+  not_target_Yoff = Yoff;
+  not_target_Yoff(target_pos) = [];
+  not_target_pos_Y = screenXpixels/2+not_target_Yoff;
   
   grText = repmat(grText_S,1,4);
   grText(:,target_pos) = grText_CS;
@@ -329,6 +338,7 @@ while is_running
     end    
   end  %
   
+  gaze_moved = 0;
   while waiting_for_response;     
     
     if ~mouse_track
@@ -347,7 +357,18 @@ while is_running
       XY(2) = y;
     end          
    
-    if sqrt((XY(1) - target_pos_X)^2 + (XY(2) - target_pos_Y)^2) < 50      
+    # if eyes left fixation window the monkey needs to go to the target in an x amount of time
+    if sqrt((XY(1) - X(pos))^2 + (XY(2) - Y(pos))^2) >= trackWindow
+      gaze_move_clock = tic();
+      gaze_moved      = 1;
+    end
+    
+    if gaze_moved && (toc(gaze_move_clock) > gaze_move_time)
+      break;
+    end
+    
+    # target hit
+    if sqrt((XY(1) - target_pos_X)^2 + (XY(2) - target_pos_Y)^2) < 150
       Screen('FillRect', eyeTrack_window, grey, txt_rects);
       Screen('FillRect', stimulus_window, grey, txt_rects);
       % Draw monkey face
@@ -360,6 +381,33 @@ while is_running
       break;
     end
     
+    if sqrt((XY(1) - not_target_pos_X(1))^2 + (XY(2) - not_target_pos_Y(1))^2) < 150
+      Screen('FillRect', eyeTrack_window, grey, txt_rects);
+      Screen('FillRect', stimulus_window, grey, txt_rects);
+      Screen('Flip', stimulus_window, 0);     
+      Screen('Flip', eyeTrack_window, 0,1);
+      waiting_for_response = 0;
+      break;
+    end
+    
+    if sqrt((XY(1) - not_target_pos_X(2))^2 + (XY(2) - not_target_pos_Y(2))^2) < 150
+      Screen('FillRect', eyeTrack_window, grey, txt_rects);
+      Screen('FillRect', stimulus_window, grey, txt_rects);
+      Screen('Flip', stimulus_window, 0);     
+      Screen('Flip', eyeTrack_window, 0,1);
+      waiting_for_response = 0; 
+      break;
+    end
+    
+    if sqrt((XY(1) - not_target_pos_X(3))^2 + (XY(2) - not_target_pos_Y(3))^2) < 150
+      Screen('FillRect', eyeTrack_window, grey, txt_rects);
+      Screen('FillRect', stimulus_window, grey, txt_rects);
+      Screen('Flip', stimulus_window, 0);     
+      Screen('Flip', eyeTrack_window, 0,1);
+      waiting_for_response = 0;
+      break;
+    end
+        
     # max length of trial
     if toc(response_time_clock) > 3      
       waiting_for_response = 0;      
@@ -442,8 +490,7 @@ while is_running
       sca;
       break;
     end    
-  end  %
-  
+  end  %  
   
   [keyIsDown, secs, keyCode, deltaSecs] = KbCheck();
   if keyIsDown && KbName(keyCode) == 'q';
@@ -465,7 +512,5 @@ while is_running
     is_running = 0;
     sca;
   end
-  
+
 end
-
-
