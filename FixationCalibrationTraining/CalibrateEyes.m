@@ -6,7 +6,7 @@ clear;
 
 % user defined parameters
 scaler = 1.55;
-stimulus_duration = 2;
+stimulus_duration = 1;
 reward_size_time = 0.2;
 
 % set-up Datapixx
@@ -62,7 +62,7 @@ ifi = Screen('GetFlipInterval', window);
 Screen('BlendFunction', window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
 
 % Load marmoset face
-theImage = imread('face10.jpg');
+theImage = imread('face8.jpg');
 [s1, s2, s3] = size(theImage);
 
 % scale image rectangle
@@ -149,8 +149,6 @@ while 1
         end
       end
     
-      % give juice 
-      fprintf('juice');
       Datapixx('RegWrRd');
       [adcData, adcTimetags] = Datapixx('ReadAdcBuffer', nAdcSamples);      
       

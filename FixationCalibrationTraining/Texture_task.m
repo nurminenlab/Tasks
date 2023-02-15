@@ -6,7 +6,7 @@ sca;
 close all;
 
 # use mouse instead of eye tracker
-mouse_track = 1;
+mouse_track = 0;
 
 % user defined parameters
 scaler               = 1.1;
@@ -18,8 +18,8 @@ ms                   = 10;
 min_target_time      = 0.5;
 max_trs              = 10000;
 response_wait_min    = 0.125;
-response_wait_max    = 1;
-gaze_move_time       = 1;
+response_wait_max    = 0.225;
+gaze_move_time       = 10;
 
 gridSize = 256;
 parameters.lowCut_S  = 0.01;
@@ -165,6 +165,8 @@ while is_running
   waiting_for_response = 0;
   tracking_reward = 0;
   on_target = 0;
+  
+  # target position
   target_pos = randi(4);
   min_target_time = response_wait_min + (response_wait_max - response_wait_min)*rand();
   
@@ -188,7 +190,7 @@ while is_running
   
   not_target_Yoff = Yoff;
   not_target_Yoff(target_pos) = [];
-  not_target_pos_Y = screenXpixels/2+not_target_Yoff;
+  not_target_pos_Y = screenYpixels/2+not_target_Yoff;
   
   grText = repmat(grText_S,1,4);
   grText(:,target_pos) = grText_CS;
@@ -318,8 +320,11 @@ while is_running
       on_target_time = toc(eyeTrack_clock);
       trial_error = 'no_error';
       Screen('FillRect', eyeTrack_window, grey, trackWindow_rect(:,:,pos));
+      Screen('DrawTextures', eyeTrack_window, grText_iTrack,[],txt_rects);
       Screen('FrameOval',eyeTrack_window,[0 0 255],target_Windowrect,3,3);
+      
       Screen('FillRect', stimulus_window, grey, rects(:,:,pos));
+      Screen('DrawTextures', stimulus_window, grText,[],txt_rects);
       Screen('Flip', stimulus_window, 0);     
       Screen('Flip', eyeTrack_window, 0,1);
       response_time_clock = tic();
@@ -381,32 +386,20 @@ while is_running
       break;
     end
     
-    if sqrt((XY(1) - not_target_pos_X(1))^2 + (XY(2) - not_target_pos_Y(1))^2) < 150
-      Screen('FillRect', eyeTrack_window, grey, txt_rects);
-      Screen('FillRect', stimulus_window, grey, txt_rects);
-      Screen('Flip', stimulus_window, 0);     
-      Screen('Flip', eyeTrack_window, 0,1);
-      waiting_for_response = 0;
-      break;
-    end
-    
-    if sqrt((XY(1) - not_target_pos_X(2))^2 + (XY(2) - not_target_pos_Y(2))^2) < 150
-      Screen('FillRect', eyeTrack_window, grey, txt_rects);
-      Screen('FillRect', stimulus_window, grey, txt_rects);
-      Screen('Flip', stimulus_window, 0);     
-      Screen('Flip', eyeTrack_window, 0,1);
-      waiting_for_response = 0; 
-      break;
-    end
-    
-    if sqrt((XY(1) - not_target_pos_X(3))^2 + (XY(2) - not_target_pos_Y(3))^2) < 150
-      Screen('FillRect', eyeTrack_window, grey, txt_rects);
-      Screen('FillRect', stimulus_window, grey, txt_rects);
-      Screen('Flip', stimulus_window, 0);     
-      Screen('Flip', eyeTrack_window, 0,1);
-      waiting_for_response = 0;
-      break;
-    end
+##    if sqrt((XY(1) - not_target_pos_X(1))^2 + (XY(2) - not_target_pos_Y(1))^2) < 150
+##      waiting_for_response = 0;
+##      break;
+##    end
+##    
+##    if sqrt((XY(1) - not_target_pos_X(2))^2 + (XY(2) - not_target_pos_Y(2))^2) < 150
+##      waiting_for_response = 0;
+##      break;
+##    end
+##    
+##    if sqrt((XY(1) - not_target_pos_X(3))^2 + (XY(2) - not_target_pos_Y(3))^2) < 150
+##      waiting_for_response = 0;
+##      break;
+##    end
         
     # max length of trial
     if toc(response_time_clock) > 3      
@@ -444,7 +437,7 @@ while is_running
       XY(2) = y;
     end          
    
-    if sqrt((XY(1) - target_pos_X)^2 + (XY(2) - target_pos_Y)^2) > 100
+    if sqrt((XY(1) - target_pos_X)^2 + (XY(2) - target_pos_Y)^2) > 200
       Screen('FillRect', eyeTrack_window, grey);
       Screen('FillRect', stimulus_window, grey);  
       Screen('Flip', stimulus_window, 0);     

@@ -7,9 +7,9 @@ clear;
 on_target = 0;
 
 % user defined parameters
-scaler = 1.15;
-wait_fixation = 4;
-rewardConsume_period = 2;
+scaler = 1.8;
+wait_fixation = 1;
+rewardConsume_period = 0.5;
 max_fixation_time = 20;
 ms = 10;
 min_target_time = 0.2;
@@ -68,7 +68,7 @@ theImage = imread(stimulus_image);
 [s1, s2, s3] = size(theImage);
 
 % scale image rectangle
-trackWin_factor = 1.25;
+trackWin_factor = 1.5;
 rect = [0 0 s1*scaler s2*scaler];
 eyePos_rect = [0 0 5 5];
 trackWindow_rect = [0 0 s1*scaler*trackWin_factor s1*scaler*trackWin_factor];

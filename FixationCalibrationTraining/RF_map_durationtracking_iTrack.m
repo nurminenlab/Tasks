@@ -32,9 +32,6 @@ Scale_mx(1) = bx(2);
 Scale_mx(4) = by(2);
 Trans_mx = [bx(1), by(1)]';
 
-#Scale_mx = zeros(2,2);
-#Trans_mx(1) = 1920/2;
-#Trans_mx(2) = 1040/2;
 % Here we call some default settings for setting up Psychtoolbox
 PsychDefaultSetup(2);
 
@@ -58,7 +55,7 @@ inc = white - grey;
 stimulus_window = Screen('OpenWindow',stimulus_screenNumber,128);
 eyeTrack_window = Screen('OpenWindow',eyeTrack_screenNumber,128);
 
-gridSize = 128;
+grating_gridSize = 128;
 orientations = [0,90];
 pixelsPerPeriod = 33;
 plateauCycles = 3;
