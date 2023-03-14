@@ -223,16 +223,20 @@ while is_running
       
       eyePos_rect = CenterRectOnPoint(eyePos_rect,XY(1),XY(2));
       Screen('FillOval', eyeTrack_window, trackMarkerColor, eyePos_rect);      
-      Screen('Flip', eyeTrack_window,0,1);    
-    
+      Screen('Flip', eyeTrack_window,0,1);      
+      
+    [keyIsDown, secs, keyCode, deltaSecs] = KbCheck();
     if keyIsDown && KbName(keyCode) == 'q';
-      is_running = 0;
-      Datapixx('StopAllSchedules');
-      Datapixx('Close');      
-      close all;
-      sca;
-      break;
-    end
+        tcp_write(t2,"q");
+        is_running = 0;      
+        close all;
+        clear t1;
+        clear t2;
+        sca;
+        Datapixx('StopAllSchedules');
+        Datapixx('Close');
+        break;
+    end    
   end  %
     
   % Draw monkey face
@@ -300,6 +304,19 @@ while is_running
     trial_error = 'no_fixation';
     on_target_time = nan;
     
+    [keyIsDown, secs, keyCode, deltaSecs] = KbCheck();
+    if keyIsDown && KbName(keyCode) == 'q';
+        tcp_write(t2,"q");
+        is_running = 0;      
+        close all;
+        clear t1;
+        clear t2;
+        sca;
+        Datapixx('StopAllSchedules');
+        Datapixx('Close');
+        break;
+    end  
+    
   end  %
 
   while on_target;     
@@ -345,14 +362,19 @@ while is_running
       
     eyePos_rect = CenterRectOnPoint(eyePos_rect,XY(1),XY(2));
     Screen('FillOval', eyeTrack_window, trackMarkerColor, eyePos_rect);
-    Screen('Flip', eyeTrack_window,0,1);
-    
+    Screen('Flip', eyeTrack_window,0,1);   
+    [keyIsDown, secs, keyCode, deltaSecs] = KbCheck();
     if keyIsDown && KbName(keyCode) == 'q';
-      is_running = 0;      
-      close all;
-      sca;
-      break;
-    end    
+        tcp_write(t2,"q");
+        is_running = 0;      
+        close all;
+        clear t1;
+        clear t2;
+        sca;
+        Datapixx('StopAllSchedules');
+        Datapixx('Close');
+        break;
+    end        
   end  %
   
   gaze_moved = 0;
@@ -425,20 +447,35 @@ while is_running
       
     eyePos_rect = CenterRectOnPoint(eyePos_rect,XY(1),XY(2));
     Screen('FillOval', eyeTrack_window, trackMarkerColor, eyePos_rect);
-    Screen('Flip', eyeTrack_window,0,1);
-    
+    Screen('Flip', eyeTrack_window,0,1);    
+    [keyIsDown, secs, keyCode, deltaSecs] = KbCheck();
     if keyIsDown && KbName(keyCode) == 'q';
-      is_running = 0;      
-      close all;
-      sca;
-      break;
+        tcp_write(t2,"q");
+        is_running = 0;      
+        close all;
+        clear t1;
+        clear t2;
+        sca;
+        Datapixx('StopAllSchedules');
+        Datapixx('Close');
+        break;
     end    
   end  %
 
   while tracking_reward;
     
     if ~mouse_track
-      Datapixx('RegWrRd');
+      Datapixx('RegWrRd');if keyIsDown && KbName(keyCode) == 'q';
+      tcp_write(t2,"q");
+      is_running = 0;      
+      close all;
+      clear t1;
+      clear t2;
+      sca;
+      Datapixx('StopAllSchedules');
+      Datapixx('Close');
+      break;
+    end
       status = Datapixx('GetAdcStatus');
       nReadFrames = status.newBufferFrames;   
       if (nReadFrames < minStreamFrames)
@@ -491,20 +528,15 @@ while is_running
       
     eyePos_rect = CenterRectOnPoint(eyePos_rect,XY(1),XY(2));
     Screen('FillOval', eyeTrack_window, trackMarkerColor, eyePos_rect);
-    Screen('Flip', eyeTrack_window,0,1);
-    
-    if keyIsDown && KbName(keyCode) == 'q';
-      is_running = 0;      
-      close all;
-      sca;
-      break;
-    end    
+    Screen('Flip', eyeTrack_window,0,1);     
   end  %  
   
   [keyIsDown, secs, keyCode, deltaSecs] = KbCheck();
   if keyIsDown && KbName(keyCode) == 'q';
       is_running = 0;      
       close all;
+      clear t1;
+      clear t2;
       sca;
       break;
   end

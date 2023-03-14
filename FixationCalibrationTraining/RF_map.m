@@ -6,31 +6,62 @@ sca;
 close all;
 
 # use mouse instead of eye tracker
-mouse_track = 0;
+mouse_track = 1;
 
 animal = 'Tully-';
 saveSTR = [animal,'RF-map-trial_records-',date,'.mat'];
+save_append = 0;
+while exist(saveSTR,'file') == 2
+  save_append = save_append + 1;
+  saveSTR = [animal,'RF-map-trial_records-',date,'_v',num2str(save_append),'.mat'];
+end  
 
 % user defined parameters
-scaler               = 2.5;
-small_scaler         = 1;
-trackWin_factor      = 1.3;
-wait_fixation        = 0.75;
-rewardConsume_period = 2;
-ms                   = 10;
-min_target_time      = 0.5;
-max_trs              = 10000;
-response_wait_min    = 0.125;
-response_wait_max    = 1;
-gaze_move_time       = 1;
-max_fixation_time    = 4;
-min_fixation_time = 0.1;
-FR = 120;
-gridSize = 256;
-fix_point_Window_size = 100;
-trackMarkerColor = [255,0,0];
-gaze_position = nan*ones(2,FR*max_fixation_time);
+if strcmp(animal,'Tully-')
+  scaler               = 0.8;
+  small_scaler         = 0.8;
+  trackWin_factor      = 2;
+  wait_fixation        = 0.75;
+  rewardConsume_period = 2;
+  ms                   = 10;
+  min_target_time      = 0.5;
+  max_trs              = 10000;
+  response_wait_min    = 0.125;
+  response_wait_max    = 1;
+  gaze_move_time       = 1;
+  max_fixation_time    = 4;
+  min_fixation_time    = 0.2;
+  reward_scaler = 0.4;
+  FR = 120;
+  gridSize = 256;
+  fix_point_Window_size = 100;
+  trackMarkerColor = [255,0,0];
+  gaze_position = nan*ones(2,FR*ceil((wait_fixation+max_fixation_time)));
+elseif strcmp(animal,'Sansa-')
+  scaler               = 2;
+  small_scaler         = 2;
+  trackWin_factor      = 2;
+  wait_fixation        = 0.75;
+  rewardConsume_period = 2;
+  ms                   = 10;
+  min_target_time      = 0.5;
+  max_trs              = 10000;
+  response_wait_min    = 0.125;
+  response_wait_max    = 1;
+  gaze_move_time       = 1;
+  max_fixation_time    = 4;
+  min_fixation_time    = 0.1;
+  reward_scaler = 0.25;
+  FR = 120;
+  gridSize = 256;
+  fix_point_Window_size = 100;
+  trackMarkerColor = [255,0,0];
+  gaze_position = nan*ones(2,FR*ceil((wait_fixation+max_fixation_time)));
+else
+  fprintf('Strange animal \n');
+end
 
+  
 if mouse_track
   XY = ones(2,1)*nan;
 end
@@ -126,7 +157,7 @@ grText_iTR = generate_grating_textures(gridSize,orientations,pixelsPerPeriod,pla
 fix_point_rect = [1 1 10 10];
 fix_point_rect = CenterRectOnPoint(fix_point_rect, screenXpixels/2, screenYpixels/2);
 
-fix_point_Window = fix_point_Window_size;
+fix_point_Window = s1*small_scaler*trackWin_factor;
 fix_point_Windowrect = [1 1 fix_point_Window fix_point_Window];
 fix_point_Windowrect = CenterRectOnPoint(fix_point_Windowrect,screenXpixels/2, screenYpixels/2);
 fix_point_Window = fix_point_Window/2;
@@ -173,8 +204,7 @@ while is_running
   Screen('FillRect', eyeTrack_window, grey, grating_rect);  
   
   greyScreen_stimulus_vbl = Screen('Flip', stimulus_window);  
-  greyScreen_eyeTrack_vbl = Screen('Flip', eyeTrack_window);   
-  
+  greyScreen_eyeTrack_vbl = Screen('Flip', eyeTrack_window);  
   
   tic();
   while toc() < rewardConsume_period;
@@ -237,6 +267,9 @@ while is_running
       XY(2) = y;
     end           
     
+    g = g +1;
+    gaze_position(:,g) = XY;
+    
     if sqrt((XY(1) - X(pos))^2 + (XY(2) - Y(pos))^2) < trackWindow
       on_target = 1;
       reaction_time = toc(wait_fixation_clock);
@@ -289,9 +322,11 @@ while is_running
     
     if sqrt((XY(1) - X(pos))^2 + (XY(2) - Y(pos))^2) >= trackWindow      
       on_target = 0;       
-      reward_size_time = toc(eyeTrack_clock);       
+      on_target_time   = toc(eyeTrack_clock);
+      reward_size_time = toc(eyeTrack_clock);      
+      trial_error = 'broke_early';
       if reward_size_time > min_fixation_time
-        reward_size_time = 0.25*sqrt(reward_size_time);
+        reward_size_time = reward_scaler*sqrt(reward_size_time);
         Datapixx('SetDoutValues', 1);
         Datapixx('RegWrRd');
         a = tic();      
@@ -300,7 +335,8 @@ while is_running
         end
         # turn pump off
         Datapixx('SetDoutValues', 0);
-        Datapixx('RegWrRd');            
+        Datapixx('RegWrRd');
+        trial_error = 'no_error';        
         break;      
       else
         break;
@@ -310,8 +346,9 @@ while is_running
     # the animals needs to hold fixation for "min_target_time" before responding
     if toc(eyeTrack_clock) > max_fixation_time
       on_target = 0;
+      on_target_time   = toc(eyeTrack_clock);
       reward_size_time = toc(eyeTrack_clock);
-      reward_size_time = 0.25*sqrt(reward_size_time);      
+      reward_size_time = reward_scaler*sqrt(reward_size_time);      
       Datapixx('SetDoutValues', 1);
       Datapixx('RegWrRd');
       a = tic();      
@@ -321,6 +358,7 @@ while is_running
       # turn pump off
       Datapixx('SetDoutValues', 0);
       Datapixx('RegWrRd');
+      trial_error = 'no_error';
       break;
     end 
       

@@ -7,12 +7,12 @@ clear;
 on_target = 0;
 
 % user defined parameters
-scaler = 1.8;
+scaler = 1.55;
 wait_fixation = 1;
 rewardConsume_period = 0.5;
 max_fixation_time = 20;
 ms = 10;
-min_target_time = 0.2;
+min_target_time = 0.15;
 
 % set-up Datapixx
 Datapixx('Open')
@@ -90,15 +90,14 @@ eyeTrack_imageTexture = Screen('MakeTexture', eyeTrack_window, theImage);
 
 tr_ind = 0;
 tr = struct();
-#conditions = ['1','2','3','4','5','6','7','8','9'];
-conditions = ['4','5','6','8','2'];
-#conditions = ['5'];
+conditions = ['5'];
 is_running = 1;
 
 KbStrokeWait();
 Datapixx('SetAdcSchedule',0,adcRate,0,[0 2],baseBuffAddr,adcRate);
 Datapixx('StartAdcSchedule');
 Datapixx('RegWrRd');
+
 # to force correct baseBuffAddr
 XY = Datapixx('ReadAdcBuffer', 1, baseBuffAddr);
 Datapixx('RegWrRd');
@@ -176,7 +175,8 @@ while is_running
       break;
     end
   end  %
-    hold on 
+  
+  hold on 
   % Draw monkey face
   Screen('DrawTexture', stimulus_window, stimulus_imageTexture, [], rects(:,:,pos), 0);
   Screen('DrawTexture', eyeTrack_window, eyeTrack_imageTexture, [], rects(:,:,pos), 0);  

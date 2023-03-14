@@ -172,8 +172,7 @@ while is_running
   Screen('FillRect', eyeTrack_window, grey, rects(:,:,pos));    
   
   greyScreen_stimulus_vbl = Screen('Flip', stimulus_window);  
-  greyScreen_eyeTrack_vbl = Screen('Flip', eyeTrack_window);   
-  
+  greyScreen_eyeTrack_vbl = Screen('Flip', eyeTrack_window);  
   
   tic();
   while toc() < rewardConsume_period;

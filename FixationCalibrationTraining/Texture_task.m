@@ -1,4 +1,4 @@
-function Texture_task(debug_on)
+
 % prepare PsychoToolbox
 addpath('/home/vpixx/Tasks/Functions/');
 AssertOpenGL;
@@ -7,19 +7,21 @@ close all;
 
 # use mouse instead of eye tracker
 mouse_track = 0;
+debug_on = 0;
 
 % user defined parameters
 scaler               = 1.1;
 trackWin_factor      = 1.3;
-wait_fixation        = 4;
+wait_fixation        = 1;
 rewardConsume_period = 2;
 max_fixation_time    = 4;
 ms                   = 10;
-min_target_time      = 0.5;
+min_target_time      = 0.025;
 max_trs              = 10000;
-response_wait_min    = 0.125;
-response_wait_max    = 0.225;
-gaze_move_time       = 10;
+response_wait_min    = 0.025;
+response_wait_max    = 0.025;
+gaze_move_time       = 1;
+response_wait_time   = 1;
 
 gridSize = 256;
 parameters.lowCut_S  = 0.01;
@@ -42,7 +44,7 @@ parameters.contrast_C = 1;
 thetas = deg2rad([-45,45,135,225]);
 R      = 200;
 
-fix_point_Window_size = 100;
+fix_point_Window_size = 150;
 trackMarkerColor = [255,0,0];
 
 if mouse_track
@@ -402,7 +404,7 @@ while is_running
 ##    end
         
     # max length of trial
-    if toc(response_time_clock) > 3      
+    if toc(response_time_clock) > response_wait_time      
       waiting_for_response = 0;      
       break;
     end 
