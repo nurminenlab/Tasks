@@ -6,7 +6,7 @@ sca;
 close all;
 
 # use mouse instead of eye tracker
-mouse_track = 1;
+mouse_track = 0;
 
 animal = 'Tully-';
 saveSTR = [animal,'RF-map-trial_records-',date,'.mat'];
@@ -18,8 +18,8 @@ end
 
 % user defined parameters
 if strcmp(animal,'Tully-')
-  scaler               = 0.8;
-  small_scaler         = 0.8;
+  scaler               = 1.2;
+  small_scaler         = 1.2;
   trackWin_factor      = 2;
   wait_fixation        = 0.75;
   rewardConsume_period = 2;
@@ -30,7 +30,7 @@ if strcmp(animal,'Tully-')
   response_wait_max    = 1;
   gaze_move_time       = 1;
   max_fixation_time    = 4;
-  min_fixation_time    = 0.2;
+  min_fixation_time    = 0.1;
   reward_scaler = 0.4;
   FR = 120;
   gridSize = 256;

@@ -9,6 +9,15 @@ close all;
 mouse_track = 0;
 debug_on = 0;
 
+animal = 'Tully-';
+
+saveSTR = [animal,'TextureTask-trial_records-',date,'.mat'];
+save_append = 0;
+while exist(saveSTR,'file') == 2
+  save_append = save_append + 1;
+  saveSTR = [animal,'RF-map-trial_records-',date,'_v',num2str(save_append),'.mat'];
+end
+
 % user defined parameters
 scaler               = 1.1;
 trackWin_factor      = 1.3;
@@ -20,8 +29,8 @@ min_target_time      = 0.025;
 max_trs              = 10000;
 response_wait_min    = 0.025;
 response_wait_max    = 0.025;
-gaze_move_time       = 1;
-response_wait_time   = 1;
+gaze_move_time       = 0.5;
+response_wait_time   = 0.75;
 
 gridSize = 256;
 parameters.lowCut_S  = 0.01;
@@ -228,6 +237,7 @@ while is_running
       Datapixx('Close');      
       close all;
       sca;
+      save(saveSTR,'trial_records');
       break;
     end
   end  %
@@ -341,6 +351,7 @@ while is_running
       is_running = 0;      
       close all;
       sca;
+      save(saveSTR,'trial_records');
       break;
     end    
   end  %
@@ -371,6 +382,7 @@ while is_running
     end
     
     if gaze_moved && (toc(gaze_move_clock) > gaze_move_time)
+      trial_error = 'no_response';
       break;
     end
     
@@ -385,27 +397,32 @@ while is_running
       Screen('Flip', eyeTrack_window, 0,1);
       reward_time_clock = tic();
       tracking_reward = 1;
+      trial_error = 'hit';
       break;
     end
     
-##    if sqrt((XY(1) - not_target_pos_X(1))^2 + (XY(2) - not_target_pos_Y(1))^2) < 150
-##      waiting_for_response = 0;
-##      break;
-##    end
-##    
-##    if sqrt((XY(1) - not_target_pos_X(2))^2 + (XY(2) - not_target_pos_Y(2))^2) < 150
-##      waiting_for_response = 0;
-##      break;
-##    end
-##    
-##    if sqrt((XY(1) - not_target_pos_X(3))^2 + (XY(2) - not_target_pos_Y(3))^2) < 150
-##      waiting_for_response = 0;
-##      break;
-##    end
+    if sqrt((XY(1) - not_target_pos_X(1))^2 + (XY(2) - not_target_pos_Y(1))^2) < 150
+      waiting_for_response = 0;
+      trial_error = 'miss';
+      break;
+    end
+    
+    if sqrt((XY(1) - not_target_pos_X(2))^2 + (XY(2) - not_target_pos_Y(2))^2) < 150
+      waiting_for_response = 0;
+      trial_error = 'miss';
+      break;
+    end
+    
+    if sqrt((XY(1) - not_target_pos_X(3))^2 + (XY(2) - not_target_pos_Y(3))^2) < 150
+      waiting_for_response = 0;
+      trial_error = 'miss';
+      break;
+    end
         
     # max length of trial
     if toc(response_time_clock) > response_wait_time      
-      waiting_for_response = 0;      
+      waiting_for_response = 0; 
+      trial_error = 'no_response';     
       break;
     end 
       
@@ -417,6 +434,7 @@ while is_running
       is_running = 0;      
       close all;
       sca;
+      save(saveSTR,'trial_records');
       break;
     end    
   end  %
@@ -446,7 +464,7 @@ while is_running
       Screen('Flip', eyeTrack_window, 0,1);
       tracking_reward = 0;
       
-      reward_size_time = 0.25*sqrt((toc(reward_time_clock)));
+      reward_size_time = 0.6*sqrt((toc(reward_time_clock)));
       Datapixx('SetDoutValues', 1);
       Datapixx('RegWrRd');
       a = tic();      
@@ -460,8 +478,8 @@ while is_running
     end
     
     # max length of trial
-    if toc(reward_time_clock) > 3
-      reward_size_time = 0.25*sqrt((toc(reward_time_clock)));
+    if toc(reward_time_clock) > 2
+      reward_size_time = 0.4*sqrt((toc(reward_time_clock)));
       Datapixx('SetDoutValues', 1);
       Datapixx('RegWrRd');
       a = tic();      
@@ -483,6 +501,7 @@ while is_running
       is_running = 0;      
       close all;
       sca;
+      save(saveSTR,'trial_records');
       break;
     end    
   end  %  
@@ -492,6 +511,7 @@ while is_running
       is_running = 0;      
       close all;
       sca;
+      save(saveSTR,'trial_records');
       break;
   end
  

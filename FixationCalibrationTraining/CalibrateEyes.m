@@ -5,9 +5,9 @@ close all;
 clear;
 
 % user defined parameters
-scaler = 1.55;
+scaler = 2.0;
 stimulus_duration = 1;
-reward_size_time = 0.2;
+reward_size_time = 0.6;
 
 % set-up Datapixx
 Datapixx('Open');
