@@ -62,8 +62,8 @@ theImage = imread('face8.jpg');
 rect = [0 0 s1*scaler s2*scaler];
 
 idx = 0;
-%[X,Y] = meshgrid(screenXpixels/2-250:250:screenXpixels/2+250,screenYpixels/2-250:250:screenYpixels/2+250);
-[X,Y] = meshgrid(screenXpixels/2-250:250:screenXpixels/2+250,screenYpixels/2+250);
+[X,Y] = meshgrid(screenXpixels/2-250:250:screenXpixels/2+250,screenYpixels/2-250:250:screenYpixels/2+250);
+%[X,Y] = meshgrid(screenXpixels/2-250:250:screenXpixels/2+250,screenYpixels/2+250);
 npos = numel(X);
 for i = 1:npos;  
   rects(:,:,i) = CenterRectOnPoint(rect, X(i), Y(i));

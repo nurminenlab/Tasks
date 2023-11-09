@@ -3,12 +3,14 @@ AssertOpenGL;
 sca;
 close all;
 
-# PsychDebugWindowConfiguration;
+#PsychDebugWindowConfiguration;
 
 # general parameters
 mouse_track = 1;
-max_trials  = 2;
+max_trials  = 4;
 trackWindow = 60;
+
+Datapixx('Open');
 
 % stimulus parameters
 f=0.02;
@@ -21,20 +23,18 @@ texsize=1920;
 # no adjustable parameters beyond this line
 if ~mouse_track 
   [FNAME, FPATH, FLTIDX] = uigetfile();
-  load([FPATH,FNAME]);
-  if manual_calib
-    [bx,by, HV, VV, HP, VP] = compute_calibration_matrix(tr,1);
-    Scale_mx = eye(2);
-    Scale_mx(1) = bx(2);
-    Scale_mx(4) = by(2);
-    Trans_mx = [bx(1), by(1)]';    
-  end
+  load([FPATH,FNAME]);  
+  [bx,by, HV, VV, HP, VP] = compute_calibration_matrix(tr,1);
+  Scale_mx = eye(2);
+  Scale_mx(1) = bx(2);
+  Scale_mx(4) = by(2);
+  Trans_mx = [bx(1), by(1)]';      
 end
 
 
 % initialize windows, draw stimuli etc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-stimulus_image = 'face8.jpg';
+stimulus_image = 'face10.jpg';
 theImage = imread(stimulus_image);
 
 screenNumber   = max(Screen('Screens'));
@@ -120,8 +120,25 @@ while is_running
   vblendtime = vbl + movieDurationSecs;
   i=0;
 
+  # check keyboard
+  [keyIsDown, secs, keyCode, deltaSecs] = KbCheck();
+  if KbName(keyCode) == 'q'
+    is_running = false;
+    sca;
+    break;    
+  endif
+  
   # vertical grating loop
-  while (vbl < vblendtime) && ~KbCheck
+  while (vbl < vblendtime) && is_running
+    
+    # check keyboard
+    [keyIsDown, secs, keyCode, deltaSecs] = KbCheck();
+    if KbName(keyCode) == 'q'
+      is_running = false;
+      sca;
+      break;    
+    endif
+    
     # TO DO asynchronous tracking
     if ~mouse_track
         Datapixx('RegWrRd');
@@ -182,9 +199,26 @@ while is_running
     
   end;
   
+  # check keyboard
+  [keyIsDown, secs, keyCode, deltaSecs] = KbCheck();
+  if KbName(keyCode) == 'q'
+    is_running = false;
+    sca;    
+    break;
+  endif
+  
   # blank loop 
   vblendtime = vbl + movieDurationSecs;
-  while (vbl < vblendtime) && ~KbCheck    
+  while (vbl < vblendtime) && is_running
+    
+    # check keyboard
+    [keyIsDown, secs, keyCode, deltaSecs] = KbCheck();
+    if KbName(keyCode) == 'q'
+      is_running = false;
+      sca;
+      break;    
+    endif
+    
     # TO DO asynchronous tracking
     if ~mouse_track
         Datapixx('RegWrRd');
@@ -237,11 +271,28 @@ while is_running
       Datapixx('RegWrRd');
     end    
     
-  end;
+  end;  
+  
+  # check keyboard
+  [keyIsDown, secs, keyCode, deltaSecs] = KbCheck();
+  if KbName(keyCode) == 'q'
+    is_running = false;
+    sca;
+    break;    
+  endif
   
   # horizontal grating loop
   vblendtime = vbl + movieDurationSecs;
-  while (vbl < vblendtime) && ~KbCheck
+  while (vbl < vblendtime) && is_running
+    
+    # check keyboard
+    [keyIsDown, secs, keyCode, deltaSecs] = KbCheck();
+    if KbName(keyCode) == 'q'
+      is_running = false;
+      sca;
+      break;    
+    endif
+    
     # TO DO asynchronous tracking
     if ~mouse_track
         Datapixx('RegWrRd');
@@ -301,9 +352,26 @@ while is_running
     
   end;
   
+  # check keyboard
+  [keyIsDown, secs, keyCode, deltaSecs] = KbCheck();
+  if KbName(keyCode) == 'q'
+    is_running = false;
+    sca;
+    break;    
+  endif
+  
   # blank loop 
   vblendtime = vbl + movieDurationSecs;
   while (vbl < vblendtime) && ~KbCheck    
+
+    # check keyboard
+    [keyIsDown, secs, keyCode, deltaSecs] = KbCheck();
+    if KbName(keyCode) == 'q'
+      is_running = false;
+      sca;
+      break;    
+    endif
+    
     # TO DO asynchronous tracking
     if ~mouse_track
         Datapixx('RegWrRd');

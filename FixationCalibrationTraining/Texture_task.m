@@ -1,4 +1,3 @@
-
 % prepare PsychoToolbox
 addpath('/home/vpixx/Tasks/Functions/');
 AssertOpenGL;
@@ -6,7 +5,7 @@ sca;
 close all;
 
 # use mouse instead of eye tracker
-mouse_track = 0;
+mouse_track = 1;
 debug_on = 0;
 
 animal = 'Tully-';
@@ -15,7 +14,7 @@ saveSTR = [animal,'TextureTask-trial_records-',date,'.mat'];
 save_append = 0;
 while exist(saveSTR,'file') == 2
   save_append = save_append + 1;
-  saveSTR = [animal,'RF-map-trial_records-',date,'_v',num2str(save_append),'.mat'];
+  saveSTR = [animal,'TextureTask-trial_records-',date,'_v',num2str(save_append),'.mat'];
 end
 
 % user defined parameters
@@ -26,29 +25,34 @@ rewardConsume_period = 2;
 max_fixation_time    = 4;
 ms                   = 10;
 min_target_time      = 0.025;
-max_trs              = 10000;
+max_trs              = 1000;
 response_wait_min    = 0.025;
 response_wait_max    = 0.025;
 gaze_move_time       = 0.5;
-response_wait_time   = 0.75;
+response_wait_time   = 15.75;
 
 gridSize = 256;
 parameters.lowCut_S  = 0.01;
 parameters.highCut_S = 0.05;
-parameters.orientation_low_S  = 0;
-parameters.orientation_high_S = 90;
-parameters.plateauPixels_S = 200;
+parameters.orientation_low_S  = 0-45;
+parameters.orientation_high_S = 0+45;
+parameters.plateauPixels_S = 150;
 parameters.edgePixels_S = 20;
-parameters.contrast_S = 0.5;
+parameters.contrast_S = 0.25;
 
 parameters.lowCut_C  = 0.2;
 parameters.highCut_C = 0.25;
-parameters.orientation_low_C  = 135-25;
-parameters.orientation_high_C = 135+25;
-parameters.orientations_C = [0,90];
+parameters.orientation_low_C  = 45-25;
+parameters.orientation_high_C = 45+25;
+#parameters.orientations_C = [0,90];
 parameters.plateauPixels_C = 100;
 parameters.edgePixels_C = 1;
-parameters.contrast_C = 1;
+parameters.contrast_C = 0.35;
+parameters.d_target = 100;
+parameters.reward_scaler = 0.3;
+
+d_target = parameters.d_target;
+reward_scaler = parameters.reward_scaler;
 
 thetas = deg2rad([-45,45,135,225]);
 R      = 200;
@@ -172,6 +176,9 @@ end
 while is_running
 
   tr_ind = tr_ind + 1
+  if tr_ind > 1
+    [grText_CS,grText_S,grText_CS_iTrack,grText_S_iTrack] = generate_filteredNoise_CS(gridSize,stimulus_window,eyeTrack_window,parameters);
+  end
   
   waiting_for_response = 0;
   tracking_reward = 0;
@@ -387,7 +394,7 @@ while is_running
     end
     
     # target hit
-    if sqrt((XY(1) - target_pos_X)^2 + (XY(2) - target_pos_Y)^2) < 150
+    if sqrt((XY(1) - target_pos_X)^2 + (XY(2) - target_pos_Y)^2) < d_target
       Screen('FillRect', eyeTrack_window, grey, txt_rects);
       Screen('FillRect', stimulus_window, grey, txt_rects);
       % Draw monkey face
@@ -401,19 +408,19 @@ while is_running
       break;
     end
     
-    if sqrt((XY(1) - not_target_pos_X(1))^2 + (XY(2) - not_target_pos_Y(1))^2) < 150
+    if sqrt((XY(1) - not_target_pos_X(1))^2 + (XY(2) - not_target_pos_Y(1))^2) < d_target
       waiting_for_response = 0;
       trial_error = 'miss';
       break;
     end
     
-    if sqrt((XY(1) - not_target_pos_X(2))^2 + (XY(2) - not_target_pos_Y(2))^2) < 150
+    if sqrt((XY(1) - not_target_pos_X(2))^2 + (XY(2) - not_target_pos_Y(2))^2) < d_target
       waiting_for_response = 0;
       trial_error = 'miss';
       break;
     end
     
-    if sqrt((XY(1) - not_target_pos_X(3))^2 + (XY(2) - not_target_pos_Y(3))^2) < 150
+    if sqrt((XY(1) - not_target_pos_X(3))^2 + (XY(2) - not_target_pos_Y(3))^2) < d_target
       waiting_for_response = 0;
       trial_error = 'miss';
       break;
@@ -464,7 +471,7 @@ while is_running
       Screen('Flip', eyeTrack_window, 0,1);
       tracking_reward = 0;
       
-      reward_size_time = 0.6*sqrt((toc(reward_time_clock)));
+      reward_size_time = reward_scaler*sqrt((toc(reward_time_clock)));
       Datapixx('SetDoutValues', 1);
       Datapixx('RegWrRd');
       a = tic();      

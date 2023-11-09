@@ -5,15 +5,15 @@ close all;
 clear;
 
 % user defined parameters
-scaler = 2.0;
+scaler = 0.3;
+#scaler = 2;
 stimulus_duration = 1;
-reward_size_time = 0.6;
+reward_size_time = 0.25;
 
 % set-up Datapixx
 Datapixx('Open');
 Datapixx('StopAllSchedules');
-Datapixx('DisableDacAdcLoopback');
-Datapixx('RegWrRd');
+
 
 % allocate space for acquiring eye-tracker voltages
 x_center = nan*ones(1,40);
@@ -69,6 +69,7 @@ theImage = imread('face8.jpg');
 rect = [0 0 s1*scaler s2*scaler];
 
 idx = 0;
+#[X,Y] = meshgrid(screenXpixels/2-400:400:screenXpixels/2+400,screenYpixels/2-400:400:screenYpixels/2+400);
 [X,Y] = meshgrid(screenXpixels/2-250:250:screenXpixels/2+250,screenYpixels/2-250:250:screenYpixels/2+250);
 for i = 1:numel(X);  
   rects(:,:,i) = CenterRectOnPoint(rect, X(i), Y(i));

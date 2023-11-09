@@ -6,8 +6,12 @@ clear;
 
 on_target = 0;
 
+imdir = '/home/vpixx/Tasks/MonkeyFaces';
+fls = dir(imdir);
+fls([1,2,3]) = [];
+
 % user defined parameters
-scaler = 1.55;
+scaler = 2;
 wait_fixation = 1;
 rewardConsume_period = 0.5;
 max_fixation_time = 20;
@@ -85,12 +89,16 @@ for i = 1:numel(X);
 end
 
 % Make the image into a texture
-stimulus_imageTexture = Screen('MakeTexture', stimulus_window, theImage);
-eyeTrack_imageTexture = Screen('MakeTexture', eyeTrack_window, theImage);
+num_conds = length(fls);
+for i = 1:num_conds
+  theImage = imread(fullfile(fls(i).folder,fls(i).name));  
+  stimulus_imageTexture(i) = Screen('MakeTexture', stimulus_window, theImage);
+  eyeTrack_imageTexture(i) = Screen('MakeTexture', eyeTrack_window, theImage);
+end
 
 tr_ind = 0;
 tr = struct();
-conditions = ['5'];
+conditions = ['4','5','6','2','8'];
 is_running = 1;
 
 KbStrokeWait();
@@ -178,8 +186,9 @@ while is_running
   
   hold on 
   % Draw monkey face
-  Screen('DrawTexture', stimulus_window, stimulus_imageTexture, [], rects(:,:,pos), 0);
-  Screen('DrawTexture', eyeTrack_window, eyeTrack_imageTexture, [], rects(:,:,pos), 0);  
+  im_num = randi(num_conds);
+  Screen('DrawTexture', stimulus_window, stimulus_imageTexture(im_num), [], rects(:,:,pos), 0);
+  Screen('DrawTexture', eyeTrack_window, eyeTrack_imageTexture(im_num), [], rects(:,:,pos), 0);  
   % Draw fixation window
   Screen('FrameOval',eyeTrack_window, [0 0 255], trackWindow_rect(:,:,pos), 3,3);
   stimulusScreen_stimulus_vbl = Screen('Flip', stimulus_window, greyScreen_stimulus_vbl + rewardConsume_period);
@@ -239,7 +248,7 @@ while is_running
         Datapixx('SetDoutValues', 1);
         Datapixx('RegWrRd');
         a = tic();
-        reward_size_time = 0.25*sqrt((on_target_time));
+        reward_size_time = 0.6*sqrt((on_target_time));
         while toc(a) < reward_size_time
           # pump juice
         end

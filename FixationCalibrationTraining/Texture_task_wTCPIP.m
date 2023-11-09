@@ -1,4 +1,4 @@
-function Texture_task_wIP(debug_on)
+function texture_task_wTCPIP(debug_on)
 
 % TCP settings to connect with Plotter
 t1 = tcp('172.27.85.52', 51007);
@@ -533,11 +533,14 @@ while is_running
   
   [keyIsDown, secs, keyCode, deltaSecs] = KbCheck();
   if keyIsDown && KbName(keyCode) == 'q';
+      cp_write(t2,"q");
       is_running = 0;      
       close all;
       clear t1;
       clear t2;
       sca;
+      Datapixx('StopAllSchedules');
+      Datapixx('Close');
       break;
   end
  

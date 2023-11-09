@@ -1,0 +1,284 @@
+# Created by Octave 6.4.0, Wed Nov 08 16:22:27 2023 EST <vpixx@vpixx>
+# name: trial_records
+# type: struct
+# ndims: 2
+ 1 6
+# length: 6
+# name: stimulus
+# type: cell
+# rows: 1
+# columns: 6
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 9
+face8.jpg
+
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 9
+face8.jpg
+
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 9
+face8.jpg
+
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 9
+face8.jpg
+
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 9
+face8.jpg
+
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 9
+face8.jpg
+
+
+
+
+
+# name: positionX
+# type: cell
+# rows: 1
+# columns: 6
+# name: <cell-element>
+# type: scalar
+960
+
+
+
+# name: <cell-element>
+# type: scalar
+960
+
+
+
+# name: <cell-element>
+# type: scalar
+960
+
+
+
+# name: <cell-element>
+# type: scalar
+960
+
+
+
+# name: <cell-element>
+# type: scalar
+960
+
+
+
+# name: <cell-element>
+# type: scalar
+960
+
+
+
+
+
+# name: positionY
+# type: cell
+# rows: 1
+# columns: 6
+# name: <cell-element>
+# type: scalar
+540
+
+
+
+# name: <cell-element>
+# type: scalar
+540
+
+
+
+# name: <cell-element>
+# type: scalar
+540
+
+
+
+# name: <cell-element>
+# type: scalar
+540
+
+
+
+# name: <cell-element>
+# type: scalar
+540
+
+
+
+# name: <cell-element>
+# type: scalar
+540
+
+
+
+
+
+# name: reaction_time
+# type: cell
+# rows: 1
+# columns: 6
+# name: <cell-element>
+# type: scalar
+0.1347358226776123
+
+
+
+# name: <cell-element>
+# type: scalar
+0.19282293319702148
+
+
+
+# name: <cell-element>
+# type: scalar
+0.25035214424133301
+
+
+
+# name: <cell-element>
+# type: scalar
+0.00019192695617675781
+
+
+
+# name: <cell-element>
+# type: scalar
+0.0011339187622070312
+
+
+
+# name: <cell-element>
+# type: scalar
+0.0011379718780517578
+
+
+
+
+
+# name: on_target_time
+# type: cell
+# rows: 1
+# columns: 6
+# name: <cell-element>
+# type: scalar
+0.031822919845581055
+
+
+
+# name: <cell-element>
+# type: scalar
+0.032675027847290039
+
+
+
+# name: <cell-element>
+# type: scalar
+0.025111913681030273
+
+
+
+# name: <cell-element>
+# type: scalar
+0.026326894760131836
+
+
+
+# name: <cell-element>
+# type: scalar
+0.033352851867675781
+
+
+
+# name: <cell-element>
+# type: scalar
+0.033366918563842773
+
+
+
+
+
+# name: trial_error
+# type: cell
+# rows: 1
+# columns: 6
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 11
+no_response
+
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 11
+no_response
+
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 3
+hit
+
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 11
+no_response
+
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 11
+no_response
+
+
+
+# name: <cell-element>
+# type: sq_string
+# elements: 1
+# length: 11
+no_response
+
+
+
+
+
+
+
