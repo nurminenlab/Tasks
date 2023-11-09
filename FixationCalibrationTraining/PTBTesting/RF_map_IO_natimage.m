@@ -6,7 +6,7 @@ function trial_records = RF_map_IO(debug_on)
   close all;
 
   # use mouse instead of eye tracker
-  mouse_track = 1;
+  mouse_track = 0;
 
   animal = 'Sansa-';
   saveSTR = [animal,'RF-map-trial_records-',date,'.mat'];
@@ -40,8 +40,8 @@ function trial_records = RF_map_IO(debug_on)
     trackMarkerColor = [255,0,0];
     gaze_position = nan*ones(2,FR*ceil((wait_fixation+max_fixation_time)));
   elseif strcmp(animal,'Sansa-')
-    scaler               = 0.4;
-    small_scaler         = 0.4;
+    scaler               = 0.35;
+    small_scaler         = 0.35;
     trackWin_factor      = 2.2;
     %raised cosine variables
     scale_val1 = 200; 
