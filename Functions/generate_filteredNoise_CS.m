@@ -3,6 +3,7 @@ function [grText_CS,grText_S,grText_CS_iTrack,grText_S_iTrack] = generate_filter
 addpath('/home/vpixx/Tasks/Functions/');
 echo off
 
+# create masks to filter in fourier space
 SFfilter_surround = Bandpass2(gridSize,parameters.lowCut_S,parameters.highCut_S);
 ORfilter_surround = OrientationBandpass(gridSize,parameters.orientation_low_S,parameters.orientation_high_S);
 SFfilter_center = Bandpass2(gridSize,parameters.lowCut_C,parameters.highCut_C);
@@ -13,10 +14,11 @@ raisedCosineMask_center  = raised_cosine(parameters.plateauPixels_C,parameters.e
 raisedCosineMask_annulus = raised_cosine(parameters.plateauPixels_C,parameters.edgePixels_C,gridSize,gridSize,0,0,'H');
 
 surround_filter = ORfilter_surround.*SFfilter_surround;
-surround_noise_patch = 2.*rand(gridSize,gridSize) -1;
-surround_ftd = surround_filter.*fftshift(fft2(surround_noise_patch));
-surround_noise = real(ifft2(ifftshift(surround_ftd)));
-surround_noise = surround_noise./max(abs(min(min(surround_noise))),max(max(surround_noise)));
+surround_noise_patch = 2.*rand(gridSize,gridSize) -1; # generate noise 
+surround_ftd = surround_filter.*fftshift(fft2(surround_noise_patch)); # filter noise stimulus in fourier space
+surround_noise = real(ifft2(ifftshift(surround_ftd))); # inverser fourier transform
+surround_noise = surround_noise./max(abs(min(min(surround_noise))),max(max(surround_noise))); # normalize
+# repeat for non-figure ground stimulus
 surround_noise_woHole = surround_noise.*parameters.contrast_S.*raisedCosineMask;
 surround_noise = surround_noise.*parameters.contrast_S;
 surround_noise = surround_noise.*raisedCosineMask.*raisedCosineMask_annulus;
@@ -31,6 +33,8 @@ center_noise = center_noise.*raisedCosineMask_center;
 
 grayScaleImageMatrix_CS = center_noise + surround_noise;
 grayScaleImageMatrix_S  = surround_noise_woHole;
+
+# stimulus computation is finised here
 
 black = BlackIndex(windowPointer);  
 white = WhiteIndex(windowPointer);  

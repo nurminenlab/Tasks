@@ -318,6 +318,8 @@ while is_running
       close all;
       sca;
       save(saveSTR,'trial_records');
+      cd;
+      cd Tasks/FixationCalibrationTraining/PTBTesting;
       break;
     end
   end  %
@@ -432,6 +434,8 @@ while is_running
       close all;
       sca;
       save(saveSTR,'trial_records');
+      cd;
+      cd Tasks/FixationCalibrationTraining/PTBTesting;
       break;
     end    
   end  %
@@ -470,8 +474,11 @@ while is_running
       break;
     end
     
+    %vbl1 = Screen('Flip', eyeTrack_window);
+    %vbl2 = Screen('Flip', stimulus_window);
+    
     # target hit
-    if sqrt((XY(1) - target_pos_X)^2 + (XY(2) - target_pos_Y)^2) < d_target
+    while sqrt((XY(1) - target_pos_X)^2 + (XY(2) - target_pos_Y)^2) < d_target
       if(count == 300)
         count = 1;
         counter = randperm(300, 300);
@@ -479,12 +486,13 @@ while is_running
         count = count + 1;
       end
       
-      Screen('FillRect', eyeTrack_window, grey, txt_rects);
-      Screen('FillRect', stimulus_window, grey, txt_rects);
+      %Screen('FillRect', eyeTrack_window, grey, txt_rects);
+      %Screen('FillRect', stimulus_window, grey, txt_rects);
+      
       % Draw monkey face
       Screen('DrawTexture', stimulus_window, stimulus_imageTexture, [], txt_rects(:,target_pos));  
       Screen('DrawTexture', eyeTrack_window, eyeTrack_imageTexture, [], txt_rects(:,target_pos));
-      
+            
       Screen('DrawTexture', stimulus_window, imageTextures{counter(count)}, [], stimulus_rect, 0);
       Screen('DrawTexture', eyeTrack_window, imageTextures{counter(count)}, [], stimulus_rect, 0);
       
@@ -492,7 +500,7 @@ while is_running
       vbl2 = Screen('Flip', stimulus_window, vbl2 + (waitframes - 0.5) * ifi);
       
       %Screen('Flip', stimulus_window, 0);     
-      %gScreen('Flip', eyeTrack_window, 0,1);
+      %Screen('Flip', eyeTrack_window, 0,1);
       reward_time_clock = tic();
       tracking_reward = 1;
       trial_error = 'hit';
@@ -533,6 +541,8 @@ while is_running
       close all;
       sca;
       save(saveSTR,'trial_records');
+      cd;
+      cd Tasks/FixationCalibrationTraining/PTBTesting;g
       break;
     end    
   end  %
@@ -601,7 +611,7 @@ while is_running
       sca;
       save(saveSTR,'trial_records');
       cd;
-      cd Tasks/FixationCalibrationTraining/PTBTesting;g
+      cd Tasks/FixationCalibrationTraining/PTBTesting;
       break;
     end    
   end  %  
@@ -628,6 +638,8 @@ while is_running
   if tr_ind >= max_trs
     is_running = 0;
     sca;
+    cd;
+    cd Tasks/FixationCalibrationTraining/PTBTesting;
   end
 
 end

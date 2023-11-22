@@ -1,21 +1,23 @@
 function trial_records = RF_map_IO(debug_on)
   % prepare PsychoToolbox
   addpath('/home/vpixx/Tasks/Functions/');
+  
   AssertOpenGL;
   sca;
   close all;
 
+  image_dir = '/home/vpixx/ImagesandRecords/images/';
+  
   # use mouse instead of eye tracker
-  mouse_track = 0;
+  mouse_track = 1;
 
   animal = 'Sansa-';
-  saveSTR = [animal,'RF-map-trial_records-',date,'.mat'];
+  saveSTR = ['/home/vpixx/ImagesandRecords/Records/', animal,'RF-map-trial_records-',date,'.mat'];
   save_append = 0;
   while exist(saveSTR,'file') == 2
     save_append = save_append + 1;
-    saveSTR = [animal,'RF-map-trial_records-',date,'_v',num2str(save_append),'.mat'];
-  end  
-  
+    saveSTR = ['/home/vpixx/ImagesandRecords/Records/', animal,'RF-map-trial_records-',date,'_v',num2str(save_append),'.mat'];
+  end
   
 
   % user defined parameters
@@ -40,17 +42,18 @@ function trial_records = RF_map_IO(debug_on)
     trackMarkerColor = [255,0,0];
     gaze_position = nan*ones(2,FR*ceil((wait_fixation+max_fixation_time)));
   elseif strcmp(animal,'Sansa-')
-    scaler               = 0.4;
+    scaler               = 0.4; # KEVIN can you please modify so that we can define the sizes of fixation targets and other stimulus in degrees of visual angle
     small_scaler         = 0.4;
     trackWin_factor      = 2.2;
     %raised cosine variables
     scale_val1 = 200; 
     scale_val2 = 20;    
     %stimulus image scaling
-    stimulus_size = tan(1/2) * 47;
-    stimulus_scaler = 0.8 * stimulus_size;
-    stimulus_center = [825 675];
-    %stimulus_size = 150;
+    #stimulus_size = tan(1/2) * 47; # KEVIN units in pixels
+    stimulus_size_cm = tan(pi/180) * 2 * 47;
+    stimulus_size = 37.8 * stimulus_size_cm;
+    stimulus_scaler = 0.25 * stimulus_size;
+    stimulus_center = [825 675];    
     image_duration = 0.25;
     waitframes = ceil(image_duration*120);
     %turn on/off fixation mask 
@@ -77,7 +80,7 @@ function trial_records = RF_map_IO(debug_on)
     fprintf('Strange animal \n');
   end 
   
-  # 
+  
   expt_info.scaler = scaler;
   expt_info.smallScaler = small_scaler;
   expt_info.trackWinFactor = trackWin_factor;
@@ -151,14 +154,16 @@ function trial_records = RF_map_IO(debug_on)
   % Get the size of the on screen window, these are the same for both screens
   [screenXpixels, screenYpixels] = Screen('WindowSize',stimulus_window);
   
-  %% NEW
+
+
   ifi1 = Screen('GetFlipInterval', eyeTrack_window);
   ifi2 = Screen('GetFlipInterval', stimulus_window);
   Screen('BlendFunction', eyeTrack_window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
   
+  fixation_rad = 43;
   if(fill_fixation == 1)
     [track_centerX, track_centerY] = WindowCenter(eyeTrack_window);
-    fillStimulus = [track_centerX-43, track_centerY-43, track_centerX+43, track_centerY+43];
+    fillStimulus = [track_centerX-fixation_rad, track_centerY-fixation_rad, track_centerX+fixation_rad, track_centerY+fixation_rad];
   else
     fillStimulus = [0 0 0 0];
   end
@@ -170,19 +175,17 @@ function trial_records = RF_map_IO(debug_on)
   
   stimulus_rect = [stimulus_center(1)-stimulus_size*stimulus_scaler/2, stimulus_center(2)-stimulus_size*stimulus_scaler/2,...
                   stimulus_center(1)+stimulus_size*stimulus_scaler/2, stimulus_center(2)+stimulus_size*stimulus_scaler/2]; 
-  %stimulus_rect = [750, 600, 900, 750];
+
   
-  cd;
-  cd ImagesandRecords/images;
-  fls = dir;
+  fls = dir(image_dir);
   
   # make textures
   for i = 1:numImage
     % Here we load in an image from file. This one is a image of rabbits that
     % is included with PTB, then shift the images to blur them into the background
-    theImageLocations{i} = fls(i+2).name;
+    theImageLocations{i} = [fls(i+2).folder,'/',fls(i+2).name];    
     theImages{i} = imread(theImageLocations{i});
-    theImages{i} = theImages{i} - 64;
+    theImages{i} = theImages{i} - 128;
 
     % Resize and Get the size of the image
     [s1, s2, s3] = size(theImages{i});
@@ -217,15 +220,13 @@ function trial_records = RF_map_IO(debug_on)
     imageTextures{i} = Screen('MakeTexture', eyeTrack_window, theImages{i});
 
   end
-
   
   expt_info.imageLocation = theImageLocations;
-
     
-  counter = randperm(300, 300);
+  counter = randperm(numImage, numImage); 
   count = 1;
   trCount = [];
-  %counter = 0;  
+  endCounter = 0;
 
   
   % Load marmoset face fixation target
@@ -257,26 +258,6 @@ function trial_records = RF_map_IO(debug_on)
   stimulus_imageTexture = Screen('MakeTexture', stimulus_window, theImage);
   eyeTrack_imageTexture = Screen('MakeTexture', eyeTrack_window, theImage);
   
-  # grating
-  grating_gridSize = 256;
-  orientations = [0:15:180];
-  pixelsPerPeriod = 33;
-  plateauCycles = 3;
-  edgeCycles = 0.25;
-  contrast = 0.8;
-  windowPointer = stimulus_window;
-  
-  %grating_rect  = [1 1 grating_gridSize grating_gridSize];
-  grating_rect = [1 1 300 300];
-  [gXoff,gYoff] = pol2cart(deg2rad(135),135);
-  grating_rect  = CenterRectOnPoint(grating_rect,screenXpixels/2+gXoff,screenYpixels/2+gYoff);
-  
-  grText     = generate_grating_textures(gridSize,orientations,pixelsPerPeriod,plateauCycles,edgeCycles,stimulus_window,stimulus_screenNumber,contrast);
-  grText_iTR = generate_grating_textures(gridSize,orientations,pixelsPerPeriod,plateauCycles,edgeCycles,eyeTrack_window,eyeTrack_screenNumber,contrast);
-  
-  fix_point_rect = [1 1 10 10];
-  fix_point_rect = CenterRectOnPoint(fix_point_rect, screenXpixels/2, screenYpixels/2);
-  
   fix_point_Window = s1*small_scaler*trackWin_factor;
   fix_point_Windowrect = [1 1 fix_point_Window fix_point_Window];
   fix_point_Windowrect = CenterRectOnPoint(fix_point_Windowrect,screenXpixels/2, screenYpixels/2);
@@ -299,6 +280,7 @@ function trial_records = RF_map_IO(debug_on)
     Datapixx('RegWrRd');
   end
   
+  # experiment main loop starts here
   while is_running
     
     gaze_position = gaze_position*nan;
@@ -309,7 +291,6 @@ function trial_records = RF_map_IO(debug_on)
     waiting_for_response = 0;
     tracking_reward = 0;
     on_target = 0;
-    text_ind = randi(length(grText_iTR));
     min_target_time = response_wait_min + (response_wait_max - response_wait_min)*rand();
     
     if tr_ind > 1
@@ -318,10 +299,7 @@ function trial_records = RF_map_IO(debug_on)
     
     % Grey screen (stay grey after exiting program)
     Screen('FillRect', stimulus_window, grey, rects(:,:,pos));    
-    Screen('FillRect', stimulus_window, grey, grating_rect);  
-    
     Screen('FillRect', eyeTrack_window, grey, rects(:,:,pos));  
-    Screen('FillRect', eyeTrack_window, grey, grating_rect);  
     
     greyScreen_stimulus_vbl = Screen('Flip', stimulus_window);  
     greyScreen_eyeTrack_vbl = Screen('Flip', eyeTrack_window);  
@@ -356,11 +334,7 @@ function trial_records = RF_map_IO(debug_on)
         Datapixx('Close');      
         close all;
         sca;
-        cd;
-        cd ImagesandRecords/Records;
-        save(saveSTR,'expt_info');
-        cd;
-        cd Tasks/FixationCalibrationTraining/PTBTesting;
+        save(saveSTR,'expt_info'); 
         break;
       end
       
@@ -409,7 +383,6 @@ function trial_records = RF_map_IO(debug_on)
         reaction_time = toc(wait_fixation_clock);
         eyeTrack_clock = tic();      
                
-        %counter = randi([1 numel(theImages)], 1);
         if(count == 300)
           count = 1;
           counter = randperm(300, 300);
@@ -419,21 +392,14 @@ function trial_records = RF_map_IO(debug_on)
         
         startCounter = count;
 
-
-        %Screen('FillRect', eyeTrack_window, grey, trackWindow_rect(:,:,pos));                         
         Screen('DrawTexture', eyeTrack_window, imageTextures{counter(count)}, [], stimulus_rect, 0);
-        %Screen('FillArc', eyeTrack_window, [0 0 0], [], wedge, 5);
         Screen('FillOval', eyeTrack_window, [128 128 128], fillStimulus);
         Screen('DrawTexture', eyeTrack_window, eyeTrack_imageTexture, [], small_rects(:,:,pos));
         Screen('FrameOval',eyeTrack_window,[0 0 255],fix_point_Windowrect,3,3); # to mark fixation window
        
-        
-        %Screen('FillRect', stimulus_window, grey, rects(:,:,pos));                      
         Screen('DrawTexture', stimulus_window, imageTextures{counter(count)}, [], stimulus_rect, 0);
-        %Screen('FillArc', stimulus_window, [0 0 0], [], wedge, 5);
         Screen('FillOval', stimulus_window, [128 128 128], fillStimulus);
         Screen('DrawTexture', stimulus_window, stimulus_imageTexture, [], small_rects(:,:,pos)); 
-        
         
         Screen('Flip', stimulus_window, greyScreen_stimulus_vbl + rewardConsume_period,1);     
         Screen('Flip', eyeTrack_window, greyScreen_stimulus_vbl + rewardConsume_period,1);
@@ -475,32 +441,19 @@ function trial_records = RF_map_IO(debug_on)
       g = g +1;
       gaze_position(:,g) = XY;
       
-      
-      
-      %counter = counter + 1;
-      %if counter > numel(theImages)
-      %  counter = randi([1 numel(theImages)], 1);
-      %end
-      
       if(count == 300)
         count = 1;
         counter = randperm(300, 300);
       else      
         count = count + 1;
       end
-       
-      %wedge = wedge + 120;
       
-      %Screen('FillRect', eyeTrack_window, grey, trackWindow_rect(:,:,pos));                         
       Screen('DrawTexture', eyeTrack_window, imageTextures{counter(count)}, [], stimulus_rect, 0);
-      %Screen('FillArc', eyeTrack_window, [0 0 0], [], wedge, 5);
       Screen('FillOval', eyeTrack_window, [128 128 128], fillStimulus);
       Screen('DrawTexture', eyeTrack_window, eyeTrack_imageTexture, [], small_rects(:,:,pos));      
       Screen('FrameOval',eyeTrack_window,[0 0 255],fix_point_Windowrect,3,3); # to mark fixation window
       
-      %Screen('FillRect', stimulus_window, grey, rects(:,:,pos));                      
       Screen('DrawTexture', stimulus_window, imageTextures{counter(count)}, [], stimulus_rect, 0);
-      %Screen('FillArc', stimulus_window, [0 0 0], [], wedge, 5);
       Screen('FillOval', stimulus_window, [128 128 128], fillStimulus);
       Screen('DrawTexture', stimulus_window, stimulus_imageTexture, [], small_rects(:,:,pos));
       
@@ -508,8 +461,7 @@ function trial_records = RF_map_IO(debug_on)
       
       vbl1 = Screen('Flip', eyeTrack_window, vbl1 + (waitframes - 0.5) * ifi1);
       vbl2 = Screen('Flip', stimulus_window, vbl2 + (waitframes - 0.5) * ifi2);
-      
-      
+          
       if sqrt((XY(1) - X(pos))^2 + (XY(2) - Y(pos))^2) >= trackWindow      
         # set digital out to 0 for channel XYZ
         Datapixx('SetDoutValues', 0);
@@ -517,10 +469,10 @@ function trial_records = RF_map_IO(debug_on)
         on_target = 0;       
         on_target_time   = toc(eyeTrack_clock);
         
-        Screen('FillRect', eyeTrack_window, grey, [0 2000 0 2000], 0);  
+        Screen('FillRect', eyeTrack_window, grey, [0 0 screenXpixels screenYpixels], 0);  
         Screen('Flip', eyeTrack_window); 
         
-        Screen('FillRect', stimulus_window, grey, [0 2000 0 2000], 0);  
+        Screen('FillRect', stimulus_window, grey, [0 0 screenXpixels screenYpixels], 0);  
         Screen('Flip', stimulus_window); 
         
         reward_size_time = toc(eyeTrack_clock);      
@@ -552,10 +504,10 @@ function trial_records = RF_map_IO(debug_on)
         on_target = 0;
         on_target_time   = toc(eyeTrack_clock);
         
-        Screen('FillRect', eyeTrack_window, grey, [0 2000 0 2000], 0);  
+        Screen('FillRect', eyeTrack_window, grey, [0 0 screenXpixels screenYpixels], 0);  
         Screen('Flip', eyeTrack_window); 
         
-        Screen('FillRect', stimulus_window, grey, [0 2000 0 2000], 0);  
+        Screen('FillRect', stimulus_window, grey, [0 0 screenXpixels screenYpixels], 0);  
         Screen('Flip', stimulus_window); 
         
         reward_size_time = toc(eyeTrack_clock);# set digital out to 0 for channel XYZ
@@ -575,29 +527,25 @@ function trial_records = RF_map_IO(debug_on)
       
       eyePos_rect = CenterRectOnPoint(eyePos_rect,XY(1),XY(2));
       Screen('FillOval', eyeTrack_window, trackMarkerColor, eyePos_rect);
-      #Screen('Flip', eyeTrack_window,0,1);
       
       if keyIsDown && KbName(keyCode) == 'q';
         is_running = 0;      
         close all;
         sca;
-        cd;
-        cd ImagesandRecords/Records;
         save(saveSTR,'expt_info');
-        cd;
-        cd Tasks/FixationCalibrationTraining/PTBTesting;
         break;
       end    
-    end  %   
+    end     
    
-    for i = 1 : (endCounter - startCounter + 1)
-      trCount(i) = counter(startCounter + i - 1);
+    if endCounter != 0  
+      for i = 1 : (endCounter - startCounter + 1)
+        trCount(i) = counter(startCounter + i - 1);
+      end
     end
    
     % record trial data
     trial_records(tr_ind).stimulus = stimulus_image;
     trial_records(tr_ind).trCount = trCount;
-    %trial_records(tr_ind).counter = counter;
     trial_records(tr_ind).positionX = X(pos);
     trial_records(tr_ind).positionY = Y(pos);
     trial_records(tr_ind).reaction_time  = reaction_time;
@@ -610,36 +558,16 @@ function trial_records = RF_map_IO(debug_on)
       is_running = 0;      
       close all;
       sca;
-      cd;
-      cd ImagesandRecords/Records;
       expt_info.trial_records = trial_records;
       save(saveSTR,'expt_info');
-      cd;
-      cd Tasks/FixationCalibrationTraining/PTBTesting;
       break;
-    end
+    end  
     
-    %imageShown = cell(1, numImage);
-    %for i = 1 : (endCounter - startCounter + 1)
-      %trCount(i) = counter(startCounter + i - 1);
-      %imageShown{i} = fls(startCounter+2+i).name;
-    %end
-    
-   
-    
-    %cd;
-    %cd ImagesandRecords/Records;
-    %save(saveSTR,'trial_records');
     
     if tr_ind >= max_trs
       is_running = 0;
-      sca;
-      %cd;
-      %cd Tasks/FixationCalibrationTraining/PTBTesting;
-    end
-    
-    %for k = 1:(counter - startCounter + 1)
-    %  imageShown(k) = fls(startCounter+2+k).name;
-    %end
+      sca;     
+    end   
+
   end
   # last line
