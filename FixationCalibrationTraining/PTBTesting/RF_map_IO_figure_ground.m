@@ -42,19 +42,18 @@ function trial_records = RF_map_IO(debug_on)
     trackMarkerColor = [255,0,0];
     gaze_position = nan*ones(2,FR*ceil((wait_fixation+max_fixation_time)));
   elseif strcmp(animal,'Sansa-')
-    distance = 47;
-    va_in_pixels = convert_to_va(distance);
-    scaler               = 0.7;  
-    small_scaler         = 0.7;
-    trackWin_factor      = 2.5;
-    %raised cosine variables, multiplication of 5 and 2, respectively 
-    scale_val1 = 1.5 * va_in_pixels; 
-    scale_val2 = 0.6 * va_in_pixels; 
+    scaler               = 0.4; # KEVIN can you please modify so that we can define the sizes of fixation targets and other stimulus in degrees of visual angle
+    small_scaler         = 0.4;
+    trackWin_factor      = 2.2;
+    %raised cosine variables
+    scale_val1 = 200; 
+    scale_val2 = 20;    
     %stimulus image scaling
-    stimulus_size = va_in_pixels;
-    stimulus_scaler = [0.5 1 2 4 8 16];
-    %stimulus_scaler = 10;
-    stimulus_center = [825 675]; # change this so as to be defined in polar coordinates MAYBE LATER
+    #stimulus_size = tan(1/2) * 47; # KEVIN units in pixels
+    stimulus_size_cm = tan(pi/180) * 2 * 47;
+    stimulus_size = 37.8 * stimulus_size_cm;
+    stimulus_scaler = 0.25 * stimulus_size;
+    stimulus_center = [825 675];    
     image_duration = 0.25;
     waitframes = ceil(image_duration*120);
     %turn on/off fixation mask 
@@ -89,6 +88,7 @@ function trial_records = RF_map_IO(debug_on)
   expt_info.scaleVal2 = scale_val2;
   expt_info.stimulusScaler = stimulus_scaler;
   expt_info.stimulusCenter = stimulus_center;
+  expt_info.stimulusScaler = stimulus_scaler;
   expt_info.waitframes = waitframes;
   expt_info.waitFixation = wait_fixation;
   expt_info.rewardConsumePeriod = rewardConsume_period;
@@ -153,6 +153,8 @@ function trial_records = RF_map_IO(debug_on)
   
   % Get the size of the on screen window, these are the same for both screens
   [screenXpixels, screenYpixels] = Screen('WindowSize',stimulus_window);
+  
+
 
   ifi1 = Screen('GetFlipInterval', eyeTrack_window);
   ifi2 = Screen('GetFlipInterval', stimulus_window);
@@ -171,8 +173,8 @@ function trial_records = RF_map_IO(debug_on)
   imageTextures = cell(1, numImage);
   theImageLocations = cell(1, numImage);
   
-  %stimulus_rect = [stimulus_center(1)-stimulus_size*stimulus_scaler/2, stimulus_center(2)-stimulus_size*stimulus_scaler/2,...
-                  %stimulus_center(1)+stimulus_size*stimulus_scaler/2, stimulus_center(2)+stimulus_size*stimulus_scaler/2]; 
+  stimulus_rect = [stimulus_center(1)-stimulus_size*stimulus_scaler/2, stimulus_center(2)-stimulus_size*stimulus_scaler/2,...
+                  stimulus_center(1)+stimulus_size*stimulus_scaler/2, stimulus_center(2)+stimulus_size*stimulus_scaler/2]; 
 
   
   fls = dir(image_dir);
@@ -219,21 +221,12 @@ function trial_records = RF_map_IO(debug_on)
 
   end
   
-  Screen('TextSize', eyeTrack_window, 50);
-  Screen('TextFont', eyeTrack_window, 'Courier');
-  DrawFormattedText(eyeTrack_window, "Ready", screenXpixels/2, screenYpixels/2, [256 0 0]);
-  Screen('Flip', eyeTrack_window);
-  
   expt_info.imageLocation = theImageLocations;
     
-  
   counter = randperm(numImage, numImage); 
   count = 1;
   trCount = [];
   endCounter = 0;
-  
-  imgScaleOrder = randperm(6,6);
-  scaleCount = 1;
 
   
   % Load marmoset face fixation target
@@ -243,12 +236,12 @@ function trial_records = RF_map_IO(debug_on)
   [s1, s2, s3] = size(theImage);
   
   % scale image rectangle
-  rect = [0 0 va_in_pixels*scaler va_in_pixels*scaler];
-  small_rect = [0 0 va_in_pixels*small_scaler va_in_pixels*small_scaler];
+  rect = [0 0 s1*scaler s2*scaler];
+  small_rect = [0 0 s1*small_scaler s2*small_scaler];
   
   eyePos_rect = [0 0 5 5];
-  trackWindow_rect = [0 0 scaler*trackWin_factor*va_in_pixels scaler*trackWin_factor*va_in_pixels]; # CHANGE TO VA
-  trackWindow = va_in_pixels*scaler*trackWin_factor/2;
+  trackWindow_rect = [0 0 s1*scaler*trackWin_factor s2*scaler*trackWin_factor];
+  trackWindow = s1*scaler*trackWin_factor/2;
   
   idx = 0;
   XBC = [screenXpixels/2-125, screenXpixels/2, screenXpixels/2 + 125];
@@ -265,7 +258,7 @@ function trial_records = RF_map_IO(debug_on)
   stimulus_imageTexture = Screen('MakeTexture', stimulus_window, theImage);
   eyeTrack_imageTexture = Screen('MakeTexture', eyeTrack_window, theImage);
   
-  fix_point_Window = va_in_pixels*small_scaler*trackWin_factor;
+  fix_point_Window = s1*small_scaler*trackWin_factor;
   fix_point_Windowrect = [1 1 fix_point_Window fix_point_Window];
   fix_point_Windowrect = CenterRectOnPoint(fix_point_Windowrect,screenXpixels/2, screenYpixels/2);
   fix_point_Window = fix_point_Window/2;
@@ -349,14 +342,15 @@ function trial_records = RF_map_IO(debug_on)
     
     % Draw monkey face
     Screen('DrawTexture', stimulus_window, stimulus_imageTexture, [], rects(:,:,pos));  
-    Screen('DrawTexture', eyeTrack_window, eyeTrack_imageTexture, [], rects(:,:,pos));     
+    Screen('DrawTexture', eyeTrack_window, eyeTrack_imageTexture, [], rects(:,:,pos)); 
+    Datapixx('SetDoutValues', 4);
+    Datapixx('RegWrRd');
       
     % Draw fixation window
     Screen('FrameOval',eyeTrack_window, [0 0 255], trackWindow_rect(:,:,pos), 3,3);
     stimulusScreen_stimulus_vbl = Screen('Flip', stimulus_window, greyScreen_stimulus_vbl + rewardConsume_period);
     stimulusScreen_eyeTrack_vbl = Screen('Flip', eyeTrack_window, greyScreen_eyeTrack_vbl + rewardConsume_period,1);
-    Datapixx('SetDoutValues', 4); 
-    Datapixx('RegWrRd');
+    
     
     wait_fixation_clock = tic();
     while toc(wait_fixation_clock) < wait_fixation;    
@@ -397,16 +391,6 @@ function trial_records = RF_map_IO(debug_on)
         else      
           count = count + 1;
         end
-        
-        if(scaleCount == 6)
-          scaleCount = 1;
-          imgScaleOrder = randperm(6, 6);
-        else      
-          scaleCount = scaleCount + 1;
-        end
-        
-        stimulus_rect = [stimulus_center(1)-stimulus_size*stimulus_scaler(imgScaleOrder(scaleCount))/2, stimulus_center(2)-stimulus_size*stimulus_scaler(imgScaleOrder(scaleCount))/2,...
-                  stimulus_center(1)+stimulus_size*stimulus_scaler(imgScaleOrder(scaleCount))/2, stimulus_center(2)+stimulus_size*stimulus_scaler(imgScaleOrder(scaleCount))/2]; 
         
         startCounter = count;
 
@@ -465,16 +449,6 @@ function trial_records = RF_map_IO(debug_on)
       else      
         count = count + 1;
       end
-      
-      if(scaleCount == 5)
-        scaleCount = 1;
-        imgScaleOrder = randperm(6, 6);
-      else      
-        scaleCount = scaleCount + 1;
-      end
-      
-      stimulus_rect = [stimulus_center(1)-stimulus_size*stimulus_scaler(imgScaleOrder(scaleCount))/2, stimulus_center(2)-stimulus_size*stimulus_scaler(imgScaleOrder(scaleCount))/2,...
-                  stimulus_center(1)+stimulus_size*stimulus_scaler(imgScaleOrder(scaleCount))/2, stimulus_center(2)+stimulus_size*stimulus_scaler(imgScaleOrder(scaleCount))/2]; 
       
       Screen('DrawTexture', eyeTrack_window, imageTextures{counter(count)}, [], stimulus_rect, 0);
       Screen('FillOval', eyeTrack_window, [128 128 128], fillStimulus);
