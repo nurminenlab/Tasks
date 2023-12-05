@@ -57,10 +57,14 @@ function trial_records = RF_map_IO(debug_on)
     stimulus_center = [825 675]; # change this so as to be defined in polar coordinates MAYBE LATER
     image_duration = 0.25;
     waitframes = ceil(image_duration*120);
+    blank_duration = 1;
+    waitframes2 = ceil(blank_duration*120);
     %turn on/off fixation mask 
     fill_fixation = 1;
     %turn on/off black white images
     black_white = 0;
+    %turn on/off blank space between nat images
+    blank = 0;
     wait_fixation        = 0.75;
     rewardConsume_period = 2;
     ms                   = 10;
@@ -167,9 +171,9 @@ function trial_records = RF_map_IO(debug_on)
   end
   
   numImage = 300;
-  theImages = cell(1, numImage);
-  imageTextures = cell(1, numImage);
-  theImageLocations = cell(1, numImage);
+  %theImages = cell(1, numImage);
+  %imageTextures = cell(1, numImage);
+  %theImageLocations = cell(1, numImage);
   
   fls = dir(image_dir);
   
@@ -229,7 +233,7 @@ function trial_records = RF_map_IO(debug_on)
   
   imgScaleOrder = randperm(6,6);
   scaleCount = 1;
-
+  
   
   % Load marmoset face fixation target
   stimulus_image = 'face10.jpg';
@@ -433,6 +437,7 @@ function trial_records = RF_map_IO(debug_on)
 
       vbl1 = Screen('Flip', eyeTrack_window);
       vbl2 = Screen('Flip', stimulus_window);
+      even = 0;
     
       while on_target;     
       
@@ -468,24 +473,46 @@ function trial_records = RF_map_IO(debug_on)
         else      
           scaleCount = scaleCount + 1;
         end
-      
-        stimulus_rect = [stimulus_center(1)-stimulus_size*stimulus_scaler(imgScaleOrder(scaleCount))/2, stimulus_center(2)-stimulus_size*stimulus_scaler(imgScaleOrder(scaleCount))/2,...
-                  stimulus_center(1)+stimulus_size*stimulus_scaler(imgScaleOrder(scaleCount))/2, stimulus_center(2)+stimulus_size*stimulus_scaler(imgScaleOrder(scaleCount))/2]; 
-      
-        Screen('DrawTexture', eyeTrack_window, imageTextures{counter(count)}, [], stimulus_rect, 0);
-        Screen('FillOval', eyeTrack_window, [128 128 128], fillStimulus);
-        Screen('DrawTexture', eyeTrack_window, eyeTrack_imageTexture, [], small_rects(:,:,pos));      
-        Screen('FrameOval',eyeTrack_window,[0 0 255],fix_point_Windowrect,3,3); # to mark fixation window
-      
-        Screen('DrawTexture', stimulus_window, imageTextures{counter(count)}, [], stimulus_rect, 0);
-        Screen('FillOval', stimulus_window, [128 128 128], fillStimulus);
-        Screen('DrawTexture', stimulus_window, stimulus_imageTexture, [], small_rects(:,:,pos));
-      
-        endCounter = count;
-      
-        vbl1 = Screen('Flip', eyeTrack_window, vbl1 + (waitframes - 0.5) * ifi1);
-        vbl2 = Screen('Flip', stimulus_window, vbl2 + (waitframes - 0.5) * ifi2);
+        
+        even = even + 1;
+        if (blank == 1 && mod(even, 2) == 1)
+          stimulus_rect = [0 0 0 0];
           
+          Screen('DrawTexture', eyeTrack_window, imageTextures{counter(count)}, [], stimulus_rect, 0);
+          Screen('FillOval', eyeTrack_window, [128 128 128], fillStimulus);
+          Screen('DrawTexture', eyeTrack_window, eyeTrack_imageTexture, [], small_rects(:,:,pos));      
+          Screen('FrameOval',eyeTrack_window,[0 0 255],fix_point_Windowrect,3,3); # to mark fixation window
+      
+          Screen('DrawTexture', stimulus_window, imageTextures{counter(count)}, [], stimulus_rect, 0);
+          Screen('FillOval', stimulus_window, [128 128 128], fillStimulus);
+          Screen('DrawTexture', stimulus_window, stimulus_imageTexture, [], small_rects(:,:,pos));
+      
+          endCounter = count;
+      
+          vbl1 = Screen('Flip', eyeTrack_window, vbl1 + (waitframes - 0.5) * ifi1);
+          vbl2 = Screen('Flip', stimulus_window, vbl2 + (waitframes - 0.5) * ifi2);
+        else
+          stimulus_rect = [stimulus_center(1)-stimulus_size*stimulus_scaler(imgScaleOrder(scaleCount))/2, stimulus_center(2)-stimulus_size*stimulus_scaler(imgScaleOrder(scaleCount))/2,...
+                  stimulus_center(1)+stimulus_size*stimulus_scaler(imgScaleOrder(scaleCount))/2, stimulus_center(2)+stimulus_size*stimulus_scaler(imgScaleOrder(scaleCount))/2];          
+      
+          Screen('DrawTexture', eyeTrack_window, imageTextures{counter(count)}, [], stimulus_rect, 0);
+          Screen('FillOval', eyeTrack_window, [128 128 128], fillStimulus);
+          Screen('DrawTexture', eyeTrack_window, eyeTrack_imageTexture, [], small_rects(:,:,pos));      
+          Screen('FrameOval',eyeTrack_window,[0 0 255],fix_point_Windowrect,3,3); # to mark fixation window
+      
+          Screen('DrawTexture', stimulus_window, imageTextures{counter(count)}, [], stimulus_rect, 0);
+          Screen('FillOval', stimulus_window, [128 128 128], fillStimulus);
+          Screen('DrawTexture', stimulus_window, stimulus_imageTexture, [], small_rects(:,:,pos));
+      
+          endCounter = count;
+          
+          if (blank == 0)
+            waitframes2 = waitframes;
+          endif
+          vbl1 = Screen('Flip', eyeTrack_window, vbl1 + (waitframes2 - 0.5) * ifi1);
+          vbl2 = Screen('Flip', stimulus_window, vbl2 + (waitframes2 - 0.5) * ifi2);
+        endif    
+        
         if sqrt((XY(1) - X(pos))^2 + (XY(2) - Y(pos))^2) >= trackWindow      
           # set digital out to 0 for channel XYZ
           Datapixx('SetDoutValues', 0);

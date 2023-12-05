@@ -11,7 +11,7 @@ fls = dir(imdir);
 fls([1,2,3]) = [];
 
 % user defined parameters
-scaler = 2;
+scaler = 2.5;
 wait_fixation = 1;
 rewardConsume_period = 0.5;
 max_fixation_time = 20;
@@ -248,7 +248,7 @@ while is_running
         Datapixx('SetDoutValues', 1);
         Datapixx('RegWrRd');
         a = tic();
-        reward_size_time = 0.6*sqrt((on_target_time));
+        reward_size_time = 0.4*sqrt((on_target_time));
         while toc(a) < reward_size_time
           # pump juice
         end
