@@ -11,9 +11,9 @@ fls = dir(imdir);
 fls([1,2,3]) = [];
 
 % user defined parameters
-scaler = 2.5;
+scaler = 1.2;
 wait_fixation = 1;
-rewardConsume_period = 0.5;
+rewardConsume_period = 0.4;
 max_fixation_time = 20;
 ms = 10;
 min_target_time = 0.15;
@@ -72,7 +72,7 @@ theImage = imread(stimulus_image);
 [s1, s2, s3] = size(theImage);
 
 % scale image rectangle
-trackWin_factor = 1.5;
+trackWin_factor = 2;
 rect = [0 0 s1*scaler s2*scaler];
 eyePos_rect = [0 0 5 5];
 trackWindow_rect = [0 0 s1*scaler*trackWin_factor s1*scaler*trackWin_factor];
@@ -99,6 +99,7 @@ end
 tr_ind = 0;
 tr = struct();
 conditions = ['4','5','6','2','8'];
+conditions = ['5'];
 is_running = 1;
 
 KbStrokeWait();
@@ -248,7 +249,7 @@ while is_running
         Datapixx('SetDoutValues', 1);
         Datapixx('RegWrRd');
         a = tic();
-        reward_size_time = 0.4*sqrt((on_target_time));
+        reward_size_time = 0.8*sqrt((on_target_time));
         while toc(a) < reward_size_time
           # pump juice
         end

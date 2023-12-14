@@ -9,7 +9,7 @@ function trial_records = RF_map_IO_natimage_lntmp(debug_on)
   image_dir = '/home/vpixx/ImagesandRecords/images/';
   
   # use mouse instead of eye tracker
-  mouse_track = 0;
+  mouse_track = 1;
 
   animal = 'Sansa-';
   saveSTR = ['/home/vpixx/ImagesandRecords/Records/', animal,'RF-map-trial_records-',date,'.mat'];
@@ -27,8 +27,8 @@ function trial_records = RF_map_IO_natimage_lntmp(debug_on)
     distance = 47;
     pix_per_cm = 36.2;
     va_in_pixels = va2pix(distance,pix_per_cm);
-    fixation_target_deg = 2;      
-    trackWin_deg     = 3;
+    fixation_target_deg = 4.5;
+    trackWin_deg     = 5;
     %raised cosine variables, multiplication of 5 and 2, respectively 
     scale_val1 = 1.5 * va_in_pixels; 
     scale_val2 = 0.6 * va_in_pixels; 
@@ -36,7 +36,7 @@ function trial_records = RF_map_IO_natimage_lntmp(debug_on)
     stimulus_size = va_in_pixels;
     stimulus_scaler = [0.5 1 2 4 8 16];    
     stimulus_center = [825 675]; # change this so as to be defined in polar coordinates MAYBE LATER
-    image_duration = 0.25;
+    image_duration = 1.5;
     waitframes = ceil(image_duration*120);
     blank_duration = 1;
     waitframes2 = ceil(blank_duration*120);
@@ -56,7 +56,7 @@ function trial_records = RF_map_IO_natimage_lntmp(debug_on)
     gaze_move_time       = 1;
     max_fixation_time    = 4;
     min_fixation_time    = 0.1;
-    reward_scaler = 0.9;
+    reward_scaler = 1.9;
     FR = 120;
     gridSize = 256;
     fix_point_Window_size = 100;
@@ -149,13 +149,24 @@ function trial_records = RF_map_IO_natimage_lntmp(debug_on)
     fillStimulus = [0 0 0 0];
   end
   
-  specificImage = [1 3 5 9 11 13];
+  specificImage = [1:50];
   numImage = length(specificImage);
-  %theImages = cell(1, numImage);
-  %imageTextures = cell(1, numImage);
-  %theImageLocations = cell(1, numImage);
+  fls = dir(image_dir);  
   
-  fls = dir(image_dir);
+  ms=100;
+  transLayer=2;
+  [x,y]=meshgrid(-ms:ms, -ms:ms);
+  maskblob=uint8(ones(2*ms+1, 2*ms+1, transLayer) * grey);  
+  
+  xsd=ms/2.0;
+  ysd=ms/2.0;
+  maskblob(:,:,transLayer)=raised_cosine####uint8(round(255 - exp(-((x/xsd).^2)-((y/ysd).^2))*255));
+  masktex=Screen('MakeTexture', eyeTrack_window, maskblob);
+  masktex=Screen('MakeTexture', stimulus_window, maskblob);
+
+  
+  %const_rect = [stimulus_center(1)-stimulus_size*stimulus_scaler(5)/2, stimulus_center(2)-stimulus_size*stimulus_scaler(5)/2,...
+                  %stimulus_center(1)+stimulus_size*stimulus_scaler(5)/2, stimulus_center(2)+stimulus_size*stimulus_scaler(5)/2]; 
   
   # make textures
   for i = 1:numImage
@@ -163,27 +174,25 @@ function trial_records = RF_map_IO_natimage_lntmp(debug_on)
     % is included with PTB, then shift the images to blur them into the background
     theImageLocations{i} = [fls(specificImage(i)+2).folder,'/',fls(specificImage(i)+2).name];    
     theImages{i} = imread(theImageLocations{i});
-    theImages{i} = theImages{i} - 128;
+    %theImages{i} = theImages{i} - 128;
 
     % Resize and Get the size of the image
     [s1, s2, s3] = size(theImages{i});    
  
     % Create the cosine window
-    [cos_window] = raised_cosine(scale_val1,scale_val2,s2,s1,0,0,'R');        
+    %[cos_window] = raised_cosine(scale_val1,scale_val2,s2,s1,0,0,'R');        
     
     % Alpha Blend the images with cosine window
-    alpha = zeros(s1,s2,3);
-    alpha(:,:,1) = cos_window;
-    alpha(:,:,2) = cos_window;
-    alpha(:,:,3) = cos_window;
-    theImages{i} = theImages{i} .* alpha;
+    %alpha = zeros(s1,s2,3);
+    %alpha(:,:,1) = cos_window;
+    %alpha(:,:,2) = cos_window;
+    %alpha(:,:,3) = cos_window;
+    %theImages{i} = theImages{i} .* alpha;
     
-    theImages{i} = theImages{i} + 128;
+    %theImages{i} = theImages{i} + 128;
     
     if black_white == 1
-      # KEVIN, this is not correct. We can't take info just on the red channel. Use mean instead. I think that theImages{i} = mean(theImages{i},3); should do.
-      theImages{i}(:,:,2) = theImages{i}(:,:,1);
-      theImages{i}(:,:,3) = theImages{i}(:,:,1);
+      theImages{i} = mean(theImages{i},3);
     end
 
     % Make the image into a texture
@@ -206,6 +215,9 @@ function trial_records = RF_map_IO_natimage_lntmp(debug_on)
   
   imgScaleOrder = randperm(length(stimulus_scaler),length(stimulus_scaler));
   scaleCount = 1; 
+  
+  stimulus_rect1 = [stimulus_center(1)-stimulus_size*stimulus_scaler(6)/2, stimulus_center(2)-stimulus_size*stimulus_scaler(6)/2,...
+                  stimulus_center(1)+stimulus_size*stimulus_scaler(6)/2, stimulus_center(2)+stimulus_size*stimulus_scaler(6)/2]; 
   
   % Load marmoset face fixation target
   stimulus_image = 'face10.jpg';
@@ -381,12 +393,16 @@ function trial_records = RF_map_IO_natimage_lntmp(debug_on)
         
           startCounter = count;
 
-          Screen('DrawTexture', eyeTrack_window, imageTextures{counter(count)}, [], stimulus_rect, 0);
+          %Screen('DrawTexture', eyeTrack_window, imageTextures{counter(count)}, [], stimulus_rect, 0);
+          Screen('DrawTexture', eyeTrack_window, imageTextures{counter(count)}, [], stimulus_rect1, 0);
+          Screen('DrawTexture', eyeTrack_window, masktex, [], stimulus_rect);
           Screen('FillOval', eyeTrack_window, [128 128 128], fillStimulus);
           Screen('DrawTexture', eyeTrack_window, eyeTrack_imageTexture, [], rects(:,:,pos));
           Screen('FrameOval',eyeTrack_window,[0 0 255],fix_point_Windowrect,3,3); # to mark fixation window
        
-          Screen('DrawTexture', stimulus_window, imageTextures{counter(count)}, [], stimulus_rect, 0);
+          %Screen('DrawTexture', stimulus_window, imageTextures{counter(count)}, [], stimulus_rect, 0);
+          Screen('DrawTexture', stimulus_window, imageTextures{counter(count)}, [], stimulus_rect1, 0);
+          Screen('DrawTexture', stimulus_window, masktex, [], stimulus_rect);
           Screen('FillOval', stimulus_window, [128 128 128], fillStimulus);
           Screen('DrawTexture', stimulus_window, stimulus_imageTexture, [], rects(:,:,pos)); 
         
@@ -450,6 +466,7 @@ function trial_records = RF_map_IO_natimage_lntmp(debug_on)
           stimulus_rect = [0 0 0 0];
           
           Screen('DrawTexture', eyeTrack_window, imageTextures{counter(count)}, [], stimulus_rect, 0);
+          %implement new alpha bending
           Screen('FillOval', eyeTrack_window, [128 128 128], fillStimulus);
           Screen('DrawTexture', eyeTrack_window, eyeTrack_imageTexture, [], rects(:,:,pos));      
           Screen('FrameOval',eyeTrack_window,[0 0 255],fix_point_Windowrect,3,3); # to mark fixation window
@@ -466,12 +483,16 @@ function trial_records = RF_map_IO_natimage_lntmp(debug_on)
           stimulus_rect = [stimulus_center(1)-stimulus_size*stimulus_scaler(imgScaleOrder(scaleCount))/2, stimulus_center(2)-stimulus_size*stimulus_scaler(imgScaleOrder(scaleCount))/2,...
                   stimulus_center(1)+stimulus_size*stimulus_scaler(imgScaleOrder(scaleCount))/2, stimulus_center(2)+stimulus_size*stimulus_scaler(imgScaleOrder(scaleCount))/2];          
       
-          Screen('DrawTexture', eyeTrack_window, imageTextures{counter(count)}, [], stimulus_rect, 0);
+          %Screen('DrawTexture', eyeTrack_window, imageTextures{counter(count)}, [], stimulus_rect, 0);
+          Screen('DrawTexture', eyeTrack_window, imageTextures{counter(count)}, [], stimulus_rect1, 0);
+          Screen('DrawTexture', eyeTrack_window, masktex, [], stimulus_rect);
           Screen('FillOval', eyeTrack_window, [128 128 128], fillStimulus);
           Screen('DrawTexture', eyeTrack_window, eyeTrack_imageTexture, [], rects(:,:,pos));      
           Screen('FrameOval',eyeTrack_window,[0 0 255],fix_point_Windowrect,3,3); # to mark fixation window
       
-          Screen('DrawTexture', stimulus_window, imageTextures{counter(count)}, [], stimulus_rect, 0);
+          %Screen('DrawTexture', stimulus_window, imageTextures{counter(count)}, [], stimulus_rect, 0);
+          Screen('DrawTexture', stimulus_window, imageTextures{counter(count)}, [], stimulus_rect1, 0);
+          Screen('DrawTexture', stimulus_window, masktex, [], stimulus_rect);
           Screen('FillOval', stimulus_window, [128 128 128], fillStimulus);
           Screen('DrawTexture', stimulus_window, stimulus_imageTexture, [], rects(:,:,pos));
       

@@ -41,8 +41,8 @@ if strcmp(animal,'Apollo-')
   gaze_position = nan*ones(2,FR*ceil((wait_fixation+max_fixation_time)));
   
 elseif strcmp(animal,'Sansa-')
-  scaler               = 0.7;
-  trackWin_factor      = 5.5;
+  scaler               = 0.4;
+  trackWin_factor      = 3.75;
   wait_fixation        = 0.75;
   rewardConsume_period = 2;
   ms                   = 10;
