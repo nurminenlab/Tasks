@@ -4,14 +4,25 @@ sca;
 close all;
 clear;
 
+#PsychDebugWindowConfiguration;
 on_target = 0;
 
-imdir = '/home/vpixx/Tasks/MonkeyFaces';
-fls = dir(imdir);
-fls([1,2,3]) = [];
+fix_target = 'grasshopper';
+switch fix_target
+  case 'monkey'
+    imdir = '/home/vpixx/Tasks/MonkeyFaces/';
+    fls = dir(imdir);
+    fls([1,2,3]) = [];
+  case 'grasshopper'
+    imdir = '/home/vpixx/Tasks/Grasshoppers/';
+    fls = dir(imdir);
+    fls([1,2]) = [];
+  otherwise
+    error('no such fixation target class')
+endswitch
 
 % user defined parameters
-scaler = 1.2;
+scaler = 2;
 wait_fixation = 1;
 rewardConsume_period = 0.4;
 max_fixation_time = 20;
@@ -70,9 +81,9 @@ Screen('BlendFunction', eyeTrack_window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA
 stimulus_image = 'face8.jpg';
 theImage = imread(stimulus_image);
 [s1, s2, s3] = size(theImage);
-
+  
 % scale image rectangle
-trackWin_factor = 2;
+trackWin_factor = 1.5;
 rect = [0 0 s1*scaler s2*scaler];
 eyePos_rect = [0 0 5 5];
 trackWindow_rect = [0 0 s1*scaler*trackWin_factor s1*scaler*trackWin_factor];
@@ -99,7 +110,7 @@ end
 tr_ind = 0;
 tr = struct();
 conditions = ['4','5','6','2','8'];
-conditions = ['5'];
+#conditions = ['5'];
 is_running = 1;
 
 KbStrokeWait();
@@ -249,7 +260,7 @@ while is_running
         Datapixx('SetDoutValues', 1);
         Datapixx('RegWrRd');
         a = tic();
-        reward_size_time = 0.8*sqrt((on_target_time));
+        reward_size_time = 0.9*sqrt((on_target_time));
         while toc(a) < reward_size_time
           # pump juice
         end
@@ -268,7 +279,7 @@ while is_running
       Datapixx('SetDoutValues', 1);
       Datapixx('RegWrRd');
       a = tic();
-      reward_size_time = 0.4*sqrt((on_target_time));
+      reward_size_time = 0.9*sqrt((on_target_time));
       while toc(a) < reward_size_time
          # pump juice
       end

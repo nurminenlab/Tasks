@@ -8,8 +8,6 @@ function [cos_window] = raised_cosine(plat,edge,xscreen,yscreen,xoff,yoff,sw)
 % hole
 
 % make the coordinats
-#[X,Y] = meshgrid(linspace(-xscreen/2,xscreen/2,xscreen), ...
- #                           linspace(-yscreen/2,yscreen/2,yscreen));
  
 if xscreen >= yscreen
   screen_vals = xscreen;
@@ -17,9 +15,7 @@ else
   screen_vals = yscreen;
 end
   
-[X,Y] = meshgrid(linspace(-screen_vals/2,screen_vals/2,xscreen), ...
-                           linspace(-screen_vals/2,screen_vals/2,yscreen));
-
+[X,Y] = meshgrid(linspace(-screen_vals/2,screen_vals/2,xscreen), linspace(-screen_vals/2,screen_vals/2,yscreen));
  
 % translate the coordinate
 X = X - xoff;

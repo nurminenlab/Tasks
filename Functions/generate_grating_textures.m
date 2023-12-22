@@ -1,4 +1,4 @@
-function grText = generate_grating_textures(gridSize,orientations,pixelsPerPeriod,plateauCycles,edgeCycles,windowPointer,screenNumber,contrast)
+function grText = generate_grating_textures(gridSize,orientations,pixelsPerPeriod,plateauPixels,edgePixels,windowPointer,screenNumber,contrast)
   
 addpath('/home/vpixx/Tasks/Functions/');
 echo off
@@ -6,9 +6,6 @@ echo off
 orientations = orientations * pi / 180; 
 spatialFrequency = 1 / pixelsPerPeriod; 
 radiansPerPixel = spatialFrequency * (2 * pi);
-
-plateauPixels = plateauCycles*pixelsPerPeriod;
-edgePixels = edgeCycles*pixelsPerPeriod;
 
 raisedCosineMask = raised_cosine(plateauPixels,edgePixels,gridSize,gridSize,0,0,'R');
 

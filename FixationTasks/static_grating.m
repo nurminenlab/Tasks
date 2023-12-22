@@ -10,7 +10,7 @@ PsychDefaultSetup(2);
 # use mouse instead of eye tracker
 mouse_track = 0;
 
-animal = 'Sansa-';
+animal = 'Sansa';
 saveSTR = [animal,'RF-map-trial_records-',date,'.mat'];
 save_append = 0;
 while exist(saveSTR,'file') == 2
@@ -19,30 +19,12 @@ while exist(saveSTR,'file') == 2
 end  
 
 % user defined parameters
-if strcmp(animal,'Apollo-')
-  scaler               = 1.8;
-  small_scaler         = 1.8;
-  trackWin_factor      = 2.0;
-  wait_fixation        = 0.75;
-  rewardConsume_period = 2;
-  ms                   = 10;
-  min_target_time      = 0.5;
-  max_trs              = 10000;
-  response_wait_min    = 0.125;
-  response_wait_max    = 1;
-  gaze_move_time       = 1;
-  max_fixation_time    = 1;
-  min_fixation_time    = 0.1;
-  reward_scaler = 0.6;
-  FR = 120;
-  gridSize = 256;
-  fix_point_Window_size = 100;
-  trackMarkerColor = [255,0,0];
-  gaze_position = nan*ones(2,FR*ceil((wait_fixation+max_fixation_time)));
-  
-elseif strcmp(animal,'Sansa-')
-  scaler               = 0.4;
-  trackWin_factor      = 3.75;
+distance = 47;
+pix_per_cm = 36.2;
+va_in_pix  = va2pix(distance,pix_per_cm);
+if strcmp(animal,'Wolfjaw')
+  scaler               = 5;
+  trackWin_factor      = 1.1;
   wait_fixation        = 0.75;
   rewardConsume_period = 2;
   ms                   = 10;
@@ -53,7 +35,28 @@ elseif strcmp(animal,'Sansa-')
   gaze_move_time       = 1;
   max_fixation_time    = 4;
   min_fixation_time    = 0.1;
-  reward_scaler = 0.9;
+  reward_scaler = 0.4;
+  FR = 120;
+  gridSize = 256;
+  fix_point_Window_size = 100;
+  trackMarkerColor = [255,0,0];
+  gaze_position = nan*ones(2,FR*ceil((wait_fixation+max_fixation_time)));
+  
+elseif strcmp(animal,'Sansa')
+  
+  scaler               = 0.4;
+  trackWin_factor      = 1.9;
+  wait_fixation        = 0.75;
+  rewardConsume_period = 2;
+  ms                   = 10;
+  min_target_time      = 0.5;
+  max_trs              = 10000;
+  response_wait_min    = 0.125;
+  response_wait_max    = 1;
+  gaze_move_time       = 1;
+  max_fixation_time    = 4;
+  min_fixation_time    = 0.1;
+  reward_scaler = 0.4;
   FR = 120;
   gridSize = 256;
   fix_point_Window_size = 100;
@@ -62,6 +65,14 @@ elseif strcmp(animal,'Sansa-')
 else
   fprintf('Strange animal \n');
 end
+
+# grating parameters
+grating_gridSize = 256;
+orientations = [0:15:180];
+pixelsPerPeriod = 33;
+plateau_pix = 3*va_in_pix;
+edge_pix = 0.2*va_in_pix;
+contrast = 0.8;
 
   
 if mouse_track
@@ -114,7 +125,7 @@ windowPointer = stimulus_window;
 [screenXpixels, screenYpixels] = Screen('WindowSize',stimulus_window);
 
 % Load marmoset face
-stimulus_image = 'face10.jpg';
+stimulus_image = 'face8.jpg';
 theImage = imread(stimulus_image);
 
 [s1, s2, s3] = size(theImage);
@@ -148,15 +159,15 @@ orientations = [0:15:180];
 pixelsPerPeriod = 33;
 plateauCycles = 3;
 edgeCycles = 0.25;
-contrast = 0.8
+contrast = 0.8;
 windowPointer = stimulus_window;
 
 grating_rect  = [1 1 grating_gridSize grating_gridSize];
 [gXoff,gYoff] = pol2cart(deg2rad(135),135);
 grating_rect  = CenterRectOnPoint(grating_rect,screenXpixels/2+gXoff,screenYpixels/2+gYoff);
 
-grText     = generate_grating_textures(gridSize,orientations,pixelsPerPeriod,plateauCycles,edgeCycles,stimulus_window,stimulus_screenNumber,contrast);
-grText_iTR = generate_grating_textures(gridSize,orientations,pixelsPerPeriod,plateauCycles,edgeCycles,eyeTrack_window,eyeTrack_screenNumber,contrast);
+grText     = generate_grating_textures(gridSize,orientations,pixelsPerPeriod,plateau_pix,edge_pix,stimulus_window,stimulus_screenNumber,contrast);
+grText_iTR = generate_grating_textures(gridSize,orientations,pixelsPerPeriod,plateau_pix,edge_pix,eyeTrack_window,eyeTrack_screenNumber,contrast);
 
 fix_point_rect = [1 1 10 10];
 fix_point_rect = CenterRectOnPoint(fix_point_rect, screenXpixels/2, screenYpixels/2);
@@ -263,7 +274,7 @@ while is_running
         continue;
       else      
         XY = median(Datapixx('ReadAdcBuffer', nReadFrames, -1),2);         
-        XY = Scale_mx*XY + Trans_mx;
+        XY = Scale_mx*XY + Trans_mx;        
       end   
     else
       [x,y,buttons,focus] = GetMouse(eyeTrack_window);

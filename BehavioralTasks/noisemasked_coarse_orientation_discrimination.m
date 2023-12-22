@@ -5,43 +5,53 @@ sca;
 close all;
 
 # use mouse instead of eye tracker
-mouse_track = 1;
+mouse_track = 0;
 debug_on = 0;
 
-animal = 'Tully-';
+animal = 'Sansa';
 
-saveSTR = [animal,'TextureTask-trial_records-',date,'.mat'];
+records_folder = '/home/vpixx/MonkeyRecords/TrialRecords/';
+saveSTR = [records_folder,animal,'/','TextureTask-trial_records-',date,'.mat'];
 save_append = 0;
 while exist(saveSTR,'file') == 2
   save_append = save_append + 1;
   saveSTR = [animal,'TextureTask-trial_records-',date,'_v',num2str(save_append),'.mat'];
 end
 
-% user defined parameters
-scaler               = 1.1;
-trackWin_factor      = 1.3;
+distance = 47;
+pix_per_cm = 36.2; # LAURI 
+va_in_pixels = va2pix(distance,pix_per_cm);
+
+% task parameters
+fix_target_deg       = 2;
+fix_target_pix       = fix_target_deg*va_in_pixels;
+track_win_deg        = 3;
+track_win_pix        = track_win_deg*va_in_pixels;
+
 wait_fixation        = 1;
 rewardConsume_period = 2;
 max_fixation_time    = 4;
 ms                   = 10;
 min_target_time      = 0.025;
-max_trs              = 1000;
 response_wait_min    = 0.025;
 response_wait_max    = 0.025;
-gaze_move_time       = 0.5;
-response_wait_time   = 15.75;
-d_target = 32;
+gaze_move_time       = 2;
+response_wait_time   = gaze_move_time;
+max_trs              = 1000;
 
 gridSize = 256;
 orientations = [0,90];
-pixelsPerPeriod = 33;
-plateauCycles = 3;
-edgeCycles = 0.25;
+pix_per_period = 33;
+plateau_deg = 4;
+plateau_pix = plateau_deg*va_in_pixels;
+edge_deg = 0.1;
+edge_pix = edge_deg*va_in_pixels;
+d_target = (plateau_deg + edge_deg + 2.5)*va_in_pixels;
 contrast = 0.8;
 reward_scaler = 0.25;
 
 thetas = deg2rad([-45,45,135,225]);
-R      = 200;
+R      = 175;
 
 fix_point_Window_size = 150;
 trackMarkerColor = [255,0,0];
@@ -100,10 +110,10 @@ theImage = imread(stimulus_image);
 [s1, s2, s3] = size(theImage);
 
 % scale image rectangle
-rect = [0 0 s1*scaler s2*scaler];
+rect = [0 0 fix_target_pix fix_target_pix];
 eyePos_rect = [0 0 5 5];
-trackWindow_rect = [0 0 s1*scaler*trackWin_factor s2*scaler*trackWin_factor];
-trackWindow = s1*scaler*trackWin_factor/2;
+trackWindow_rect = [0 0 track_win_pix track_win_pix];
+trackWindow = track_win_pix;
 
 idx = 0;
 XBC = [screenXpixels/2-125, screenXpixels/2, screenXpixels/2 + 125];
@@ -127,8 +137,10 @@ fix_point_Windowrect = [1 1 fix_point_Window fix_point_Window];
 fix_point_Windowrect = CenterRectOnPoint(fix_point_Windowrect,screenXpixels/2, screenYpixels/2);
 fix_point_Window = fix_point_Window/2;
 
-target_Windowrect = [1 1 gridSize gridSize];
+target_Windowrect = [1 1 gridSize,gridSize];
 target_Windowrect = CenterRectOnPoint(target_Windowrect,screenXpixels/2, screenYpixels/2);
+
+target_MarkRect = [0, 0, d_target, d_target];
 
 txt_rect = [1 1 gridSize gridSize];
 txt_rect = CenterRectOnPoint(txt_rect, screenXpixels/2, screenYpixels/2);
@@ -139,8 +151,8 @@ for i = 1:length(Xoff)
   txt_rects(:,i) = round(CenterRectOnPoint(txt_rect, screenXpixels/2+Xoff(i), screenYpixels/2+Yoff(i)));
 end
 
-grText_all     = generate_grating_textures(gridSize,orientations,pixelsPerPeriod,plateauCycles,edgeCycles,stimulus_window,stimulus_screenNumber,contrast);
-grText_all_iTrack = generate_grating_textures(gridSize,orientations,pixelsPerPeriod,plateauCycles,edgeCycles,eyeTrack_window,eyeTrack_screenNumber,contrast);
+grText_all     = generate_grating_textures(gridSize,orientations,pix_per_period,plateau_pix,edge_pix,stimulus_window,stimulus_screenNumber,contrast);
+grText_all_iTrack = generate_grating_textures(gridSize,orientations,pix_per_period,plateau_pix,edge_pix,eyeTrack_window,eyeTrack_screenNumber,contrast);
 
 tr_ind = 0;
 tr = struct();
@@ -184,6 +196,8 @@ while is_running
   target_Windowrect = round(CenterRectOnPoint(target_Windowrect, screenXpixels/2+Xoff(target_pos), screenYpixels/2+Yoff(target_pos)));
   target_pos_X = screenXpixels/2+Xoff(target_pos);  
   target_pos_Y = screenYpixels/2+Yoff(target_pos); 
+  
+  target_MarkRect = round(CenterRectOnPoint(target_MarkRect, screenXpixels/2+Xoff(target_pos), screenYpixels/2+Yoff(target_pos)));
   
   not_target_Xoff = Xoff;
   not_target_Xoff(target_pos) = [];  
@@ -323,7 +337,7 @@ while is_running
       trial_error = 'no_error';
       Screen('FillRect', eyeTrack_window, grey, trackWindow_rect(:,:,pos));
       Screen('DrawTextures', eyeTrack_window, grText_iTrack,[],txt_rects);
-      Screen('FrameOval',eyeTrack_window,[0 0 255],target_Windowrect,3,3);
+      Screen('FrameOval',eyeTrack_window,[0 0 255],target_MarkRect,3,3);
       
       Screen('FillRect', stimulus_window, grey, rects(:,:,pos));
       Screen('DrawTextures', stimulus_window, grText,[],txt_rects);
@@ -377,7 +391,7 @@ while is_running
     end
     
     # target hit
-    if sqrt((XY(1) - target_pos_X)^2 + (XY(2) - target_pos_Y)^2) < d_target
+    if sqrt((XY(1) - target_pos_X)^2 + (XY(2) - target_pos_Y)^2) < d_target/2
       Screen('FillRect', eyeTrack_window, grey, txt_rects);
       Screen('FillRect', stimulus_window, grey, txt_rects);
       % Draw monkey face
@@ -391,6 +405,7 @@ while is_running
       break;
     end
     
+    if 0
     if sqrt((XY(1) - not_target_pos_X(1))^2 + (XY(2) - not_target_pos_Y(1))^2) < d_target
       waiting_for_response = 0;
       trial_error = 'miss';
@@ -408,7 +423,7 @@ while is_running
       trial_error = 'miss';
       break;
     end
-        
+    end    
     # max length of trial
     if toc(response_time_clock) > response_wait_time      
       waiting_for_response = 0; 
