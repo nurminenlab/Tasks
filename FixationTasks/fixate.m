@@ -22,9 +22,10 @@ switch fix_target
 endswitch
 
 % user defined parameters
-scaler = 2;
-wait_fixation = 1;
-rewardConsume_period = 0.4;
+scaler = 1.25;
+reward_scaler = 0.9;
+wait_fixation = 0.5;
+rewardConsume_period = 1.4;
 max_fixation_time = 20;
 ms = 10;
 min_target_time = 0.15;
@@ -83,7 +84,7 @@ theImage = imread(stimulus_image);
 [s1, s2, s3] = size(theImage);
   
 % scale image rectangle
-trackWin_factor = 1.5;
+trackWin_factor = 2.0;
 rect = [0 0 s1*scaler s2*scaler];
 eyePos_rect = [0 0 5 5];
 trackWindow_rect = [0 0 s1*scaler*trackWin_factor s1*scaler*trackWin_factor];
@@ -260,7 +261,7 @@ while is_running
         Datapixx('SetDoutValues', 1);
         Datapixx('RegWrRd');
         a = tic();
-        reward_size_time = 0.9*sqrt((on_target_time));
+        reward_size_time = reward_scaler*sqrt((on_target_time));
         while toc(a) < reward_size_time
           # pump juice
         end

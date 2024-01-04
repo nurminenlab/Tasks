@@ -9,7 +9,7 @@ function BSD_natim_flash(debug_on);
   image_dir = '/home/vpixx/Images/BSD/';
   
   # use mouse instead of eye tracker
-  mouse_track = 1;
+  mouse_track = 0;
   save_records = 0;
   
   animal = 'Sansa';
@@ -216,7 +216,7 @@ function BSD_natim_flash(debug_on);
   endCounter = 0;
   
   imgScaleOrder = randperm(length(stimulus_size_deg),length(stimulus_size_deg));
-  scaleCount = 1; 
+   
   
   % Load marmoset face fixation target
   stimulus_image = 'face10.jpg';

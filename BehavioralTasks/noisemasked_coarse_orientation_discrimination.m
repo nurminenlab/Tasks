@@ -35,7 +35,7 @@ ms                   = 10;
 min_target_time      = 0.025;
 response_wait_min    = 0.025;
 response_wait_max    = 0.025;
-gaze_move_time       = 2;
+gaze_move_time       = 1.5;
 response_wait_time   = gaze_move_time;
 max_trs              = 1000;
 

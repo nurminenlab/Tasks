@@ -23,8 +23,8 @@ distance = 47;
 pix_per_cm = 36.2;
 va_in_pix  = va2pix(distance,pix_per_cm);
 if strcmp(animal,'Wolfjaw')
-  scaler               = 5;
-  trackWin_factor      = 1.1;
+  scaler               = 1.25;
+  trackWin_factor      = 2.0;
   wait_fixation        = 0.75;
   rewardConsume_period = 2;
   ms                   = 10;
@@ -35,7 +35,7 @@ if strcmp(animal,'Wolfjaw')
   gaze_move_time       = 1;
   max_fixation_time    = 4;
   min_fixation_time    = 0.1;
-  reward_scaler = 0.4;
+  reward_scaler = 0.9;
   FR = 120;
   gridSize = 256;
   fix_point_Window_size = 100;
@@ -95,7 +95,7 @@ if ~mouse_track
   Scale_mx = eye(2);
   Scale_mx(1) = bx(2);
   Scale_mx(4) = by(2);
-  Trans_mx = [bx(1), by(1)-65]';
+  Trans_mx = [bx(1), by(1)]';
 end
 
 
