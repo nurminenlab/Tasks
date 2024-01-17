@@ -11,7 +11,7 @@ debug_on = 0;
 animal = 'Sansa';
 
 records_folder = '/home/vpixx/MonkeyRecords/TrialRecords/';
-saveSTR = [records_folder,animal,'/','TextureTask-trial_records-',date,'.mat'];
+saveSTR = [records_folder,animal,'/','noisemasked_coarse_orientation_discrimination-trial_records-',date,'.mat'];
 save_append = 0;
 while exist(saveSTR,'file') == 2
   save_append = save_append + 1;
@@ -30,12 +30,12 @@ track_win_pix        = track_win_deg*va_in_pixels;
 
 wait_fixation        = 1;
 rewardConsume_period = 2;
-max_fixation_time    = 4;
+max_fixation_time    = 2;
 ms                   = 10;
 min_target_time      = 0.025;
 response_wait_min    = 0.025;
 response_wait_max    = 0.025;
-gaze_move_time       = 1.5;
+gaze_move_time       = 0.5;
 response_wait_time   = gaze_move_time;
 max_trs              = 1000;
 

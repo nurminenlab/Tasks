@@ -1,4 +1,4 @@
-function trial_records = RF_map_IO_wedge(debug_on)
+function trial_records = ring_wedge(debug_on)
   % prepare PsychoToolbox
   addpath('/home/vpixx/Tasks/Functions/');
   AssertOpenGL;
@@ -8,69 +8,58 @@ function trial_records = RF_map_IO_wedge(debug_on)
   # use mouse instead of eye tracker
   mouse_track = 1;
 
-  animal = 'Sansa-';
-  saveSTR = [animal,'RF-map-trial_records-',date,'.mat'];
+  animal = 'Sansa';
+  saveSTR = ['/home/vpixx/MonkeyRecords/TrialRecords/',animal,'/','RF-map-wedge-trial_records-',date,'.mat'];
+  STR = ['/home/vpixx/MonkeyRecords/TrialRecords/',animal,'/','RF-map-wedge-trial_records-',date];
   save_append = 0;
   while exist(saveSTR,'file') == 2
     save_append = save_append + 1;
-    saveSTR = [animal,'RF-map-trial_records-',date,'_v',num2str(save_append),'.mat'];
+    saveSTR = [STR,'_v',num2str(save_append),'.mat'];
   end  
 
   % user defined parameters
   if strcmp(animal,'Tully-')
-    scaler               = 0.6;
-    small_scaler         = 0.6;
-    trackWin_factor      = 2.0;
-    wait_fixation        = 0.75;
-    rewardConsume_period = 2;
-    ms                   = 10;
-    min_target_time      = 0.5;
-    max_trs              = 10000;
-    response_wait_min    = 0.125;
-    response_wait_max    = 1;
-    gaze_move_time       = 1;
-    max_fixation_time    = 1;
-    min_fixation_time    = 0.1;
-    reward_scaler = 0.6;
-    FR = 120;
-    gridSize = 256;
-    fix_point_Window_size = 100;
-    trackMarkerColor = [255,0,0];
-    gaze_position = nan*ones(2,FR*ceil((wait_fixation+max_fixation_time)));
-  elseif strcmp(animal,'Sansa-')
-    scaler               = 0.4;
-    small_scaler         = 0.4;
-    trackWin_factor      = 2.2;
-    %raised cosine variables
-    scale_val1 = 200; 
-    scale_val2 = 20;    
-    %stimulus image scaling
-    stimulus_scaler = 10;
-    stimulus_center = [825 675];
-    stimulus_size = 150;
-    waitframes = 7; 
+    scaler = 0.6;
+    
+  elseif strcmp(animal,'Sansa')
+    view_distance = 47;
+    pix_per_cm = 36.2;
+    va_in_pix  = va2pix(view_distance,pix_per_cm);
+    fixation_target_deg = 1.1;    
+    ring_width_deg = 1;
+    
+    trackWin_deg = 2.2; # diameter
+    waitframes = 7;
     %turn on/off fixation mask 
     fill_fixation = 1;
     wait_fixation        = 0.75;
     rewardConsume_period = 2;
-    ms                   = 10;
-    min_target_time      = 0.5;
-    max_trs              = 10000;
-    response_wait_min    = 0.125;
-    response_wait_max    = 1;
-    gaze_move_time       = 1;
-    max_fixation_time    = 10;
-    min_fixation_time    = 0.1;
+    ms                   = 10;    
+    max_trs              = 10000;    
+    max_fixation_duration = 10;
+    min_fixation_duration = 0.1;
     reward_scaler = 0.9;
-    FR = 120;
-    gridSize = 256;
-    fix_point_Window_size = 100;
+    FR = 120;    
     trackMarkerColor = [255,0,0];
-    gaze_position = nan*ones(2,FR*ceil((wait_fixation+max_fixation_time)));
+    gaze_position = nan*ones(2,FR*ceil((wait_fixation+max_fixation_duration)));
   else
     fprintf('Strange animal \n');
-  end
+  end  
   
+  expt_info.view_distance = view_distance;
+  expt_info.pix_per_cm = pix_per_cm;
+  expt_info.va_in_pix = va_in_pix;
+  expt_info.fixation_target_deg = fixation_target_deg;
+  expt_info.ring_width_deg = ring_width_deg;
+  expt_info.trackWin_deg = trackWin_deg;
+  expt_info.waitframes = waitframes;
+  expt_info.fill_fixation = fill_fixation;
+  expt_info.wait_fixation = wait_fixation;
+  expt_info.rewardConsume_period = rewardConsume_period;
+  expt_info.max_trs  = max_trs;
+  expt_info.max_fixation_duration = max_fixation_duration;  
+  expt_info.min_fixation_duration = min_fixation_duration;
+  expt_info.reward_scaler = reward_scaler;
   
   if mouse_track
     XY = ones(2,1)*nan;
@@ -132,36 +121,23 @@ function trial_records = RF_map_IO_wedge(debug_on)
     fillStimulus = [0 0 0 0];
   end
     
-  %wedge = 179;
   wedge = randperm(90,90) + 180;
   wedgeCount = 1;
-  
-  ring = randperm(20, 20);
   ringCount = 1;
-  ring_angle = 0.5;
-  distance = 47;
-  ring_size = tan(ring_angle/2) * distance;
-  %inRing = [track_centerX - 45 - 2*count, track_centerY - 45 - 2*count, track_centerX + 45 + 2*count, track_centerY + 45 + 2*count]; 
-  %outRing = [track_centerX - 50 - 2*count, track_centerY - 50 - 2*count, track_centerX + 50 + 2*count, track_centerY + 50 + 2*count]; 
   
-  max_ecc = tan(4/2) * distance;
-  %% NEW
-
-  
+  ring = 1:0.5:6;
+  ring = (va_in_pix*ring)/2; # /2 due to downstream    
+    
   % Load marmoset face
   stimulus_image = 'face10.jpg';
   theImage = imread(stimulus_image);
-  
-  
   [s1, s2, s3] = size(theImage);
   
   % scale image rectangle
-  rect = [0 0 s1*scaler s2*scaler];
-  small_rect = [0 0 s1*small_scaler s2*small_scaler];
-  
+  rect = [1 1 fixation_target_deg*va_in_pix fixation_target_deg*va_in_pix];  
   eyePos_rect = [0 0 5 5];
-  trackWindow_rect = [0 0 s1*scaler*trackWin_factor s2*scaler*trackWin_factor];
-  trackWindow = s1*scaler*trackWin_factor/2;
+  trackWindow_rect = [1 1 trackWin_deg*va_in_pix trackWin_deg*va_in_pix];
+  trackWindow = (trackWin_deg*va_in_pix)/2;
   
   idx = 0;
   XBC = [screenXpixels/2-125, screenXpixels/2, screenXpixels/2 + 125];
@@ -169,8 +145,7 @@ function trial_records = RF_map_IO_wedge(debug_on)
   [X,Y] = meshgrid(XBC,YBC);
   
   for i = 1:numel(X);  
-    rects(:,:,i) = CenterRectOnPoint(rect, X(i), Y(i));
-    small_rects(:,:,i)  = CenterRectOnPoint(small_rect, X(i), Y(i));
+    rects(:,:,i) = CenterRectOnPoint(rect, X(i), Y(i));   
     trackWindow_rect(:,:,i) = CenterRectOnPoint(trackWindow_rect, X(i), Y(i));
   end
   
@@ -179,29 +154,7 @@ function trial_records = RF_map_IO_wedge(debug_on)
   eyeTrack_imageTexture = Screen('MakeTexture', eyeTrack_window, theImage);
   
   # grating
-  grating_gridSize = 256;
-  orientations = [0:15:180];
-  pixelsPerPeriod = 33;
-  plateauCycles = 3;
-  edgeCycles = 0.25;
-  contrast = 0.8;
-  windowPointer = stimulus_window;
-  
-  %grating_rect  = [1 1 grating_gridSize grating_gridSize];
-  grating_rect = [1 1 300 300];
-  [gXoff,gYoff] = pol2cart(deg2rad(135),135);
-  grating_rect  = CenterRectOnPoint(grating_rect,screenXpixels/2+gXoff,screenYpixels/2+gYoff);
-  
-  grText     = generate_grating_textures(gridSize,orientations,pixelsPerPeriod,plateauCycles,edgeCycles,stimulus_window,stimulus_screenNumber,contrast);
-  grText_iTR = generate_grating_textures(gridSize,orientations,pixelsPerPeriod,plateauCycles,edgeCycles,eyeTrack_window,eyeTrack_screenNumber,contrast);
-  
-  fix_point_rect = [1 1 10 10];
-  fix_point_rect = CenterRectOnPoint(fix_point_rect, screenXpixels/2, screenYpixels/2);
-  
-  fix_point_Window = s1*small_scaler*trackWin_factor;
-  fix_point_Windowrect = [1 1 fix_point_Window fix_point_Window];
-  fix_point_Windowrect = CenterRectOnPoint(fix_point_Windowrect,screenXpixels/2, screenYpixels/2);
-  fix_point_Window = fix_point_Window/2;
+  windowPointer = stimulus_window;  
   
   tr_ind = 0;
   tr = struct();
@@ -229,27 +182,23 @@ function trial_records = RF_map_IO_wedge(debug_on)
     
     waiting_for_response = 0;
     tracking_reward = 0;
-    on_target = 0;
-    text_ind = randi(length(grText_iTR));
-    min_target_time = response_wait_min + (response_wait_max - response_wait_min)*rand();
+    on_target = 0;    
+    
     
     if tr_ind > 1
       Screen('Flip', eyeTrack_window,0);
     end   
     
     % Grey screen (stay grey after exiting program)
-    Screen('FillRect', stimulus_window, grey, rects(:,:,pos));    
-    Screen('FillRect', stimulus_window, grey, grating_rect);  
-    
-    Screen('FillRect', eyeTrack_window, grey, rects(:,:,pos));  
-    Screen('FillRect', eyeTrack_window, grey, grating_rect);  
+    Screen('FillRect', stimulus_window, grey, rects(:,:,pos));
+    Screen('FillRect', eyeTrack_window, grey, rects(:,:,pos));
     
     greyScreen_stimulus_vbl = Screen('Flip', stimulus_window);  
     greyScreen_eyeTrack_vbl = Screen('Flip', eyeTrack_window);  
     
-    tic();
+    reward_consume_clock = tic();
     
-    while toc() < rewardConsume_period;
+    while toc(reward_consume_clock) < rewardConsume_period;
       [keyIsDown, secs, keyCode, deltaSecs] = KbCheck();                    
       if ~mouse_track
         Datapixx('RegWrRd');
@@ -277,11 +226,8 @@ function trial_records = RF_map_IO_wedge(debug_on)
         Datapixx('Close');      
         close all;
         sca;
-        cd;
-        cd ImagesandRecords/Records_wedge;
-        save(saveSTR,'trial_records');
-        cd;
-        cd Tasks/FixationCalibrationTraining/PTBTesting;
+        expt_info.trial_records = trial_records;        
+        save(saveSTR,'trial_records');        
         break;
       end
       
@@ -293,9 +239,10 @@ function trial_records = RF_map_IO_wedge(debug_on)
       
     % Draw fixation window
     Screen('FrameOval',eyeTrack_window, [0 0 255], trackWindow_rect(:,:,pos), 3,3);
+    Datapixx('SetDoutValues', 4);
     stimulusScreen_stimulus_vbl = Screen('Flip', stimulus_window, greyScreen_stimulus_vbl + rewardConsume_period);
     stimulusScreen_eyeTrack_vbl = Screen('Flip', eyeTrack_window, greyScreen_eyeTrack_vbl + rewardConsume_period,1);
-    
+    Datapixx('RegWrRd');
     
     wait_fixation_clock = tic();
     while toc(wait_fixation_clock) < wait_fixation;    
@@ -317,22 +264,20 @@ function trial_records = RF_map_IO_wedge(debug_on)
       end           
       
       g = g +1;
-      gaze_position(:,g) = XY;
-      
-      
+      gaze_position(:,g) = XY;      
       
       # this condition checks if the monkey's gaze is on target
       if sqrt((XY(1) - X(pos))^2 + (XY(2) - Y(pos))^2) < trackWindow 
         # set digital out to 1 for channel XYZ
-        Datapixx('SetDoutValues', 16);
+        Datapixx('SetDoutValues', 20);
         Datapixx('RegWrRd');
         on_target = 1;
-        tic();
+        
         reaction_time = toc(wait_fixation_clock);
         eyeTrack_clock = tic();      
                
         trWedge = [];
-         
+        trRing  = []; 
         if(wedgeCount == 90)
           wedgeCount = 1;
           wedge = randperm(90, 90) + 180;
@@ -340,14 +285,17 @@ function trial_records = RF_map_IO_wedge(debug_on)
           wedgeCount = wedgeCount + 1;
         end
         
-        inRing = [track_centerX - 45 - ring_size*ring(ringCount), track_centerY - 45 - ring_size*ring(ringCount), track_centerX + 45 + ring_size*ring(ringCount), track_centerY + 45 + ring_size*ring(ringCount)]; 
-        outRing = [track_centerX - 45 - ring_size*(ring(ringCount)+1), track_centerY - 45 - ring_size*(ring(ringCount)+1), track_centerX + 45 + ring_size*(ring(ringCount)+1), track_centerY + 45 + ring_size*(ring(ringCount)+1)]; 
+        inRing = [track_centerX - ring(ringCount), track_centerY - ring(ringCount), track_centerX + ring(ringCount), track_centerY + ring(ringCount)]; 
+        outRing = [track_centerX - (ring(ringCount)+ring_width_deg*va_in_pix), ...
+                    track_centerY - (ring(ringCount)+ring_width_deg*va_in_pix), ...
+                    track_centerX + (ring(ringCount)+ring_width_deg*va_in_pix), ...
+                    track_centerY + (ring(ringCount)+ring_width_deg*va_in_pix)];
+        ringCount = ringCount + 1;
         
-        if(45 + ring_size*(ring(ringCount)+1) > abs(max_ecc))
+        if ringCount > length(ring)
           ringCount = 1;
-          ring = randperm(20, 20);
-        else      
-          ringCount = ringCount + 1;
+          ring_ind = randperm(length(ring), length(ring));
+          ring = ring(ring_ind);
         end
     
         turn = 0;
@@ -362,18 +310,26 @@ function trial_records = RF_map_IO_wedge(debug_on)
           Screen('FillOval', stimulus_window, [128 128 128], inRing);
         end
         
-        Screen('DrawTexture', eyeTrack_window, eyeTrack_imageTexture, [], small_rects(:,:,pos));
-        Screen('FrameOval',eyeTrack_window,[0 0 255],fix_point_Windowrect,3,3); # to mark fixation window
+        Screen('DrawTexture', eyeTrack_window, eyeTrack_imageTexture, [], rects(:,:,pos));
+        Screen('FrameOval',eyeTrack_window,[0 0 255],trackWindow_rect(:,:,pos),3,3); # to mark fixation window
           
-        Screen('DrawTexture', stimulus_window, stimulus_imageTexture, [], small_rects(:,:,pos)); 
+        Screen('DrawTexture', stimulus_window, stimulus_imageTexture, [], rects(:,:,pos)); 
         Screen('FillOval', stimulus_window, [128 128 128], [0 0 0 0]);
-
         
         turn = turn + 1;
         trWedge(turn) = wedge(wedgeCount);
-        
-        Screen('Flip', stimulus_window, greyScreen_stimulus_vbl + rewardConsume_period,1);     
-        Screen('Flip', eyeTrack_window, greyScreen_stimulus_vbl + rewardConsume_period,1);
+        trRing(turn) = ring(ringCount);
+        vbl1 = Screen('Flip', stimulus_window, greyScreen_stimulus_vbl + rewardConsume_period,1);
+        vbl2 = Screen('Flip', eyeTrack_window, greyScreen_stimulus_vbl + rewardConsume_period,1);
+        # send TTL
+        now = tic();
+        Datapixx('SetDoutValues', 84);
+        Datapixx('RegWrRd');
+        while toc(now) < 0.02
+          # do nothing
+        end
+        Datapixx('SetDoutValues', 20);          
+        Datapixx('RegWrRd');
         
         break;
       end
@@ -382,14 +338,24 @@ function trial_records = RF_map_IO_wedge(debug_on)
       Screen('FillOval', eyeTrack_window, trackMarkerColor, eyePos_rect);
       Screen('Flip', eyeTrack_window,0,1);
       
-      reaction_time = nan;
+      reaction_time = NaN;
       trial_error = 'no_fixation';
-      on_target_time = nan;
-      
-    end  
+      trWedge = NaN;
+      trRing = NaN;
+      fixation_duration = NaN;
 
-    vbl1 = Screen('Flip', eyeTrack_window);
-    vbl2 = Screen('Flip', stimulus_window);
+      if keyIsDown && KbName(keyCode) == 'q';
+        is_running = 0;
+        Datapixx('StopAllSchedules');
+        Datapixx('Close');      
+        close all;
+        sca;
+        expt_info.trial_records = trial_records;        
+        save(saveSTR,'trial_records');        
+        break;
+      end      
+    end  
+    
     
     while on_target;     
       
@@ -419,15 +385,19 @@ function trial_records = RF_map_IO_wedge(debug_on)
         wedgeCount = wedgeCount + 1;
       end
       
-      inRing = [track_centerX - 45 - ring_size*ring(ringCount), track_centerY - 45 - ring_size*ring(ringCount), track_centerX + 45 + ring_size*ring(ringCount), track_centerY + 45 + ring_size*ring(ringCount)]; 
-      outRing = [track_centerX - 45 - ring_size*(ring(ringCount)+1), track_centerY - 45 - ring_size*(ring(ringCount)+1), track_centerX + 45 + ring_size*(ring(ringCount)+1), track_centerY + 45 + ring_size*(ring(ringCount)+1)]; 
-         
-      if(45 + ring_size*(ring(ringCount)+1) > abs(max_ecc))
+      inRing = [track_centerX - ring(ringCount), track_centerY - ring(ringCount), track_centerX + ring(ringCount), track_centerY + ring(ringCount)]; 
+      outRing = [track_centerX - (ring(ringCount)+ring_width_deg*va_in_pix), ...
+                  track_centerY - (ring(ringCount)+ring_width_deg*va_in_pix), ...
+                  track_centerX + (ring(ringCount)+ring_width_deg*va_in_pix), ...
+                  track_centerY + (ring(ringCount)+ring_width_deg*va_in_pix)];
+      ringCount = ringCount + 1;
+        
+      if ringCount > length(ring)
         ringCount = 1;
-        ring = randperm(20, 20);
-      else      
-        ringCount = ringCount + 1;
-      end
+        ring_ind = randperm(length(ring), length(ring));
+        ring = ring(ring_ind);
+      end              
+      
       
       if(mod(turn, 2) == 0)
         Screen('FillArc', eyeTrack_window, [0 0 0], fillStimulus, wedge(wedgeCount), 9);
@@ -439,24 +409,32 @@ function trial_records = RF_map_IO_wedge(debug_on)
         Screen('FillOval', stimulus_window, [128 128 128], inRing);
       end
       
-      Screen('DrawTexture', eyeTrack_window, eyeTrack_imageTexture, [], small_rects(:,:,pos));      
-      Screen('FrameOval',eyeTrack_window,[0 0 255],fix_point_Windowrect,3,3); # to mark fixation window
+      Screen('DrawTexture', eyeTrack_window, eyeTrack_imageTexture, [], rects(:,:,pos));      
+      Screen('FrameOval',eyeTrack_window,[0 0 255],trackWindow_rect(:,:,pos),3,3); # to mark fixation window
       
-      Screen('DrawTexture', stimulus_window, stimulus_imageTexture, [], small_rects(:,:,pos));
+      Screen('DrawTexture', stimulus_window, stimulus_imageTexture, [], rects(:,:,pos));
       
       turn = turn + 1;
       trWedge(turn) = wedge(wedgeCount);
+      trRing(turn)  = ring(ringCount);
       
       vbl1 = Screen('Flip', eyeTrack_window, vbl1 + (waitframes - 0.5) * ifi1);
       vbl2 = Screen('Flip', stimulus_window, vbl2 + (waitframes - 0.5) * ifi2);
-      
+      # send TTL
+      now = tic();
+      Datapixx('SetDoutValues', 84);
+      Datapixx('RegWrRd');
+      while toc(now) < 0.02
+        # do nothing
+      end
+      Datapixx('SetDoutValues', 20);          
+      Datapixx('RegWrRd');
       
       if sqrt((XY(1) - X(pos))^2 + (XY(2) - Y(pos))^2) >= trackWindow      
         # set digital out to 0 for channel XYZ
         Datapixx('SetDoutValues', 0);
         Datapixx('RegWrRd');
-        on_target = 0;       
-        on_target_time   = toc(eyeTrack_clock);
+        on_target = 0;        
         
         Screen('FillRect', eyeTrack_window, grey, [0 2000 0 2000], 0);  
         Screen('Flip', eyeTrack_window); 
@@ -464,9 +442,9 @@ function trial_records = RF_map_IO_wedge(debug_on)
         Screen('FillRect', stimulus_window, grey, [0 2000 0 2000], 0);  
         Screen('Flip', stimulus_window); 
         
-        reward_size_time = toc(eyeTrack_clock);      
+        fixation_duration = toc(eyeTrack_clock);      
         trial_error = 'broke_early';
-        if reward_size_time > min_fixation_time
+        if fixation_duration > min_fixation_duration
           reward_size_time = reward_scaler*sqrt(reward_size_time);
           # look at this command
           Datapixx('SetDoutValues', 1);
@@ -486,12 +464,12 @@ function trial_records = RF_map_IO_wedge(debug_on)
       end    
       
       # the animals needs to hold fixation for "min_target_time" before responding
-      if toc(eyeTrack_clock) > max_fixation_time
+      if toc(eyeTrack_clock) > max_fixation_duration
         # set digital out to 0 for channel XYZ
         Datapixx('SetDoutValues', 0);
         Datapixx('RegWrRd');
         on_target = 0;
-        on_target_time   = toc(eyeTrack_clock);
+        fixation_duration = toc(eyeTrack_clock);
         
         Screen('FillRect', eyeTrack_window, grey, [0 2000 0 2000], 0);  
         Screen('Flip', eyeTrack_window); 
@@ -522,11 +500,8 @@ function trial_records = RF_map_IO_wedge(debug_on)
         is_running = 0;      
         close all;
         sca;
-        cd;
-        cd ImagesandRecords/Records_wedge;
-        save(saveSTR,'trial_records');
-        cd;
-        cd Tasks/FixationCalibrationTraining/PTBTesting;
+        expt_info.trial_records = trial_records;        
+        save(saveSTR,'trial_records');        
         break;
       end    
     end  %   
@@ -535,34 +510,21 @@ function trial_records = RF_map_IO_wedge(debug_on)
     if keyIsDown && KbName(keyCode) == 'q';
       is_running = 0;      
       close all;
-      sca;
-      cd;
-      cd ImagesandRecords/Records_wedge;
-      save(saveSTR,'trial_records');
-      cd;
-      cd Tasks/FixationCalibrationTraining/PTBTesting;
+      sca; 
+      expt_info.trial_records = trial_records;
+      save(saveSTR,'trial_records');     
       break;
     end
     
     % record trial data
     trial_records(tr_ind).stimulus = stimulus_image;
     trial_records(tr_ind).trWedge = trWedge;
+    trial_records(tr_ind).trRing = trRing;
     trial_records(tr_ind).positionX = X(pos);
     trial_records(tr_ind).positionY = Y(pos);
     trial_records(tr_ind).reaction_time  = reaction_time;
-    trial_records(tr_ind).on_target_time = on_target_time; 
+    trial_records(tr_ind).fixation_duration = fixation_duration;
     trial_records(tr_ind).trial_error = trial_error;
-    trial_records(tr_ind).gaze_position = gaze_position;
-    
-    cd;
-    cd ImagesandRecords/Records_wedge;
-    save(saveSTR,'trial_records');
-    
-    if tr_ind >= max_trs
-      is_running = 0;
-      sca;
-      cd;
-      cd Tasks/FixationCalibrationTraining/PTBTesting;
-    end
+    trial_records(tr_ind).gaze_position = gaze_position; 
     
   end

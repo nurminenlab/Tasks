@@ -1,4 +1,4 @@
-function BSD_natim_flash(debug_on);
+function BSD_image_flash(debug_on);
   % prepare PsychoToolbox
   addpath('/home/vpixx/Tasks/Functions/');
   
@@ -9,55 +9,50 @@ function BSD_natim_flash(debug_on);
   image_dir = '/home/vpixx/Images/BSD/';
   
   # use mouse instead of eye tracker
-  mouse_track = 0;
+  mouse_track = 1;
   save_records = 0;
   
   animal = 'Sansa';
-  saveSTR = ['/home/vpixx/MonkeyRecords/TrialRecords/', animal,'/','RF-map-trial_records-',date,'.mat'];
+  saveSTR = ['/home/vpixx/MonkeyRecords/TrialRecords/', animal,'/','BSD-image-flash-trial_records-',date,'.mat'];
   save_append = 0;
   while exist(saveSTR,'file') == 2;
     save_append = save_append + 1;
-    saveSTR = ['/home/vpixx/MonkeyRecords/TrialRecords/', animal,'/','RF-map-trial_records-',date,'_v',num2str(save_append),'.mat'];
+    saveSTR = ['/home/vpixx/MonkeyRecords/TrialRecords/', animal,'/','BSD-image-flash-trial_records-',date,'_v',num2str(save_append),'.mat'];
   end  
 
   % user defined parameters
-  if strcmp(animal,'Wolfjaw-')
-    scaler               = 0.6;
+  if strcmp(animal,'Wolfjaw-')    
     # under development
   elseif strcmp(animal,'Sansa')
     distance = 47;
     pix_per_cm = 36.2;
     va_in_pix  = va2pix(distance,pix_per_cm);
     fixation_target_deg = 2;      
-    trackWin_deg     = 3;        
+    trackWin_deg = 3;
    
     stimulus_size_deg = [4,16];    
+    edge_rolloff_deg  = 0.2;
     stimulus_center = [825 675]; # change this so as to be defined in polar coordinates MAYBE LATER
     
-    image_duration = 0.4;
-    waitframes = ceil(image_duration*120);
+    image_duration = 1;
     blank_duration = 1;
+    blank = 1;    
+    waitframes = ceil(image_duration*120);    
     waitframes2 = ceil(blank_duration*120);    
     fill_fixation = 1;    
-    black_white = 0;    
-    blank = 0;
+    black_white = 0;
     
     wait_fixation        = 0.75;
     rewardConsume_period = 2;
-    ms                   = 10;
-    min_target_time      = 0.5;
-    max_trs              = 10000;
-    response_wait_min    = 0.125;
-    response_wait_max    = 1;
-    gaze_move_time       = 1;
-    max_fixation_time    = 4;
-    min_fixation_time    = 0.1;
+    ms                   = 10;    
+    max_trs              = 10000;    
+    max_fixation_duration    = 24;
+    min_fixation_duration    = 0.1;
     reward_scaler = 0.9;
-    FR = 120;
-    gridSize = 256;
+    FR = 120;    
     fix_point_Window_size = 100;
     trackMarkerColor = [255,0,0];
-    gaze_position = nan*ones(2,FR*ceil((wait_fixation+max_fixation_time)));
+    gaze_position = nan*ones(2,FR*ceil((wait_fixation+max_fixation_duration)));
   else
     fprintf('Strange animal \n');
   end   
@@ -65,27 +60,22 @@ function BSD_natim_flash(debug_on);
   # raised cosine mask parameters  
   mask_grid = 962;
   plateau_pix = stimulus_size_deg*va_in_pix;
-  edge_pix = 0.2*va_in_pix;
+  edge_pix = edge_rolloff_deg*va_in_pix;
   
   expt_info.fixation_target_deg = fixation_target_deg;
+  expt_info.stimulus_size_deg = stimulus_size_deg;
+  expt_info.edge_rolloff_deg = edge_rolloff_deg;
+  expt_info.va_in_pix = va_in_pix;
   expt_info.trackWin_deg = trackWin_deg;  
-  expt_info.stimulusCenter = stimulus_center;
+  expt_info.stimulus_center = stimulus_center;
   expt_info.waitframes = waitframes;
-  expt_info.waitFixation = wait_fixation;
-  expt_info.rewardConsumePeriod = rewardConsume_period;
-  expt_info.ms = ms;
-  expt_info.minTargetTime = min_target_time;
-  expt_info.maxTrs = max_trs;
-  expt_info.responseWaitMin = response_wait_min;
-  expt_info.responseWaitMax = response_wait_max;
-  expt_info.gazeMoveTime = gaze_move_time;
-  expt_info.maxFixationTime = max_fixation_time;
-  expt_info.minFixationTime = min_fixation_time;
-  expt_info.rewardScaler = reward_scaler;
+  expt_info.wait_fixation = wait_fixation;
+  expt_info.rewardConsume_period = rewardConsume_period;  
+  expt_info.max_trs = max_trs;  
+  expt_info.max_fixation_duration = max_fixation_duration;
+  expt_info.min_fixation_duration = min_fixation_duration;
+  expt_info.reward_scaler = reward_scaler;
   expt_info.FR = FR;
-  expt_info.gridSize = gridSize;
-  expt_info.fixPointWindowSize = fix_point_Window_size;
-  
   
   if mouse_track
     XY = ones(2,1)*nan;
@@ -138,22 +128,26 @@ function BSD_natim_flash(debug_on);
   ifi1 = Screen('GetFlipInterval', eyeTrack_window);
   ifi2 = Screen('GetFlipInterval', stimulus_window);
   Screen('BlendFunction', eyeTrack_window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
-  
-  fixation_rad = 43;
+  Screen('BlendFunction', stimulus_window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
+    
   if(fill_fixation == 1)
     [track_centerX, track_centerY] = WindowCenter(eyeTrack_window);
-    fillStimulus = [track_centerX-fixation_rad, track_centerY-fixation_rad, track_centerX+fixation_rad, track_centerY+fixation_rad];
+    fillStimulus = [track_centerX-(trackWin_deg*va_in_pix)/2, ...
+                      track_centerY-(trackWin_deg*va_in_pix)/2, ...
+                      track_centerX+(trackWin_deg*va_in_pix)/2, ...
+                      track_centerY+(trackWin_deg*va_in_pix)/2];
   else
     fillStimulus = [0 0 0 0];
   end
   
   alpha_mask = ones(mask_grid,mask_grid,2)*grey;
-  mask_text = NaN*ones(1,length(stimulus_size_deg));  
+  mask_text_eyeTrack = NaN*ones(1,length(stimulus_size_deg));  
+  mask_text_stimulus = NaN*ones(1,length(stimulus_size_deg));
   for i = 1:length(stimulus_size_deg)
     [cos_window] = 255 - 255*raised_cosine(plateau_pix(i),edge_pix,mask_grid,mask_grid,0,0,'R');  
-    alpha_mask(:,:,2) = cos_window;
-    # make alpha texture
-    mask_text(i) = Screen('MakeTexture', eyeTrack_window, alpha_mask);
+    alpha_mask(:,:,2) = cos_window;    
+    mask_text_eyeTrack(i) = Screen('MakeTexture', eyeTrack_window, alpha_mask);
+    mask_text_stimulus(i) = Screen('MakeTexture', stimulus_window, alpha_mask);
   end
   
   mask_rect = [0 0 mask_grid mask_grid];
@@ -184,14 +178,13 @@ function BSD_natim_flash(debug_on);
     
     all_rects(i,:) = [0 0 2*s1 2*s2];
     
-    if black_white == 1
-      # KEVIN, this is not correct. We can't take info just on the red channel. Use mean instead. I think that theImages{i} = mean(theImages{i},3); should do.
+    if black_white == 1      
       theImages{i} = mean(theImages{i},3);
     end
 
     % Make the image into a texture
-    imageTextures{i} = Screen('MakeTexture', stimulus_window, theImages{i});
-    imageTextures{i} = Screen('MakeTexture', eyeTrack_window, theImages{i});
+    imageTextures_stimulus{i} = Screen('MakeTexture', stimulus_window, theImages{i});
+    imageTextures_eyeTrack{i} = Screen('MakeTexture', eyeTrack_window, theImages{i});
 
   end  
 
@@ -216,10 +209,10 @@ function BSD_natim_flash(debug_on);
   endCounter = 0;
   
   imgScaleOrder = randperm(length(stimulus_size_deg),length(stimulus_size_deg));
-   
+  scaleCount = 1;     
   
   % Load marmoset face fixation target
-  stimulus_image = 'face10.jpg';
+  stimulus_image = 'face8.jpg';
   theImage = imread(stimulus_image);
   [s1, s2, s3] = size(theImage);
   
@@ -284,9 +277,9 @@ function BSD_natim_flash(debug_on);
     
       waiting_for_response = 0;
       tracking_reward = 0;
-      on_target = 0;
-      min_target_time = response_wait_min + (response_wait_max - response_wait_min)*rand();
-    
+      on_target = 0;      
+      even = 0;
+      
       if tr_ind > 1
         Screen('Flip', eyeTrack_window,0);
       end   
@@ -343,9 +336,9 @@ function BSD_natim_flash(debug_on);
       
       % Draw fixation window
       Screen('FrameOval',eyeTrack_window, [0 0 255], trackWindow_rect(:,:,pos), 3,3);
+      Datapixx('SetDoutValues', 4);
       stimulusScreen_stimulus_vbl = Screen('Flip', stimulus_window, greyScreen_stimulus_vbl + rewardConsume_period);
-      stimulusScreen_eyeTrack_vbl = Screen('Flip', eyeTrack_window, greyScreen_eyeTrack_vbl + rewardConsume_period,1);
-      Datapixx('SetDoutValues', 4); 
+      stimulusScreen_eyeTrack_vbl = Screen('Flip', eyeTrack_window, greyScreen_eyeTrack_vbl + rewardConsume_period,1);       
       Datapixx('RegWrRd');
     
       wait_fixation_clock = tic();
@@ -373,7 +366,7 @@ function BSD_natim_flash(debug_on);
         # this condition checks if the monkey's gaze is on target
         if sqrt((XY(1) - X(pos))^2 + (XY(2) - Y(pos))^2) < trackWindow 
           
-          # set digital out to 1 for channel XYZ
+          # set digital out to 1 for channel XYZ when the monkey acquires fixation
           Datapixx('SetDoutValues', 20);
           Datapixx('RegWrRd');
           on_target = 1;
@@ -391,19 +384,29 @@ function BSD_natim_flash(debug_on);
           stimulus_rect = all_rects(rect_type(counter(count)),:);          
           startCounter = count;
 
-          Screen('DrawTexture', eyeTrack_window, imageTextures{counter(count)}, [], stimulus_rect, 0);
+          # first stimulus after the monkey acquired fixation
+          Screen('DrawTexture', eyeTrack_window, imageTextures_eyeTrack{counter(count)}, [], stimulus_rect, 0);
           Screen('FillOval', eyeTrack_window, [128 128 128], fillStimulus);
-          Screen('DrawTexture', eyeTrack_window, mask_text(scaleCount), [], mask_rect, 0);
+          Screen('DrawTexture', eyeTrack_window, mask_text_eyeTrack(scaleCount), [], mask_rect, 0);
           Screen('DrawTexture', eyeTrack_window, eyeTrack_imageTexture, [], rects(:,:,pos));
           Screen('FrameOval',eyeTrack_window,[0 0 255],fix_point_Windowrect,3,3); # to mark fixation window
        
-          Screen('DrawTexture', stimulus_window, imageTextures{counter(count)}, [], stimulus_rect, 0);
+          Screen('DrawTexture', stimulus_window, imageTextures_stimulus{counter(count)}, [], stimulus_rect, 0);
           Screen('FillOval', stimulus_window, [128 128 128], fillStimulus);
+          Screen('DrawTexture', stimulus_window, mask_text_stimulus(scaleCount), [], mask_rect, 0);
           Screen('DrawTexture', stimulus_window, stimulus_imageTexture, [], rects(:,:,pos)); 
         
-          Screen('Flip', stimulus_window, greyScreen_stimulus_vbl + rewardConsume_period,1);     
-          Screen('Flip', eyeTrack_window, greyScreen_stimulus_vbl + rewardConsume_period,1);
-        
+          vbl1 = Screen('Flip', stimulus_window, greyScreen_stimulus_vbl + rewardConsume_period,1);     
+          vbl2 = Screen('Flip', eyeTrack_window, greyScreen_stimulus_vbl + rewardConsume_period,1);
+          # send TTL
+          now = tic();
+          Datapixx('SetDoutValues', 84);
+          Datapixx('RegWrRd');
+          while toc(now) < 0.02
+            # do nothing
+          end
+          Datapixx('SetDoutValues', 20);          
+          Datapixx('RegWrRd');
           break;
         end
       
@@ -415,17 +418,14 @@ function BSD_natim_flash(debug_on);
         trial_error = 'no_fixation';
         on_target_time = nan;
       
-      end  
-
-      vbl1 = Screen('Flip', eyeTrack_window);
-      vbl2 = Screen('Flip', stimulus_window);
-      even = 0;
+      end   
+      
     
       while on_target;     
       
         if ~mouse_track
           Datapixx('RegWrRd');
-          status = Datapixx('GetAdcStatus');g
+          status = Datapixx('GetAdcStatus');
           nReadFrames = status.newBufferFrames;   
           if (nReadFrames < minStreamFrames)
             continue;
@@ -447,21 +447,14 @@ function BSD_natim_flash(debug_on);
           counter = randperm(numImage, numImage);
         else      
           count = count + 1;
-        end    
-        
+        end            
         
         even = even + 1;
-        if (blank == 1 && mod(even, 2) == 1)
+        if (blank == 1) && (mod(even, 2) == 1)
           stimulus_rect = [0 0 0 0];
-          
-          Screen('DrawTexture', eyeTrack_window, imageTextures{counter(count)}, [], stimulus_rect, 0);
-          Screen('FillOval', eyeTrack_window, [128 128 128], fillStimulus);
-          Screen('DrawTexture', eyeTrack_window, eyeTrack_imageTexture, [], rects(:,:,pos));      
-          Screen('FrameOval',eyeTrack_window,[0 0 255],fix_point_Windowrect,3,3); # to mark fixation window
-      
-          Screen('DrawTexture', stimulus_window, imageTextures{counter(count)}, [], stimulus_rect, 0);
-          Screen('FillOval', stimulus_window, [128 128 128], fillStimulus);
-          Screen('DrawTexture', stimulus_window, stimulus_imageTexture, [], rects(:,:,pos));
+          display(even)
+          Screen('FillRect', stimulus_window, grey);    
+          Screen('FillRect', eyeTrack_window, grey);         
       
           endCounter = count;
       
@@ -470,24 +463,31 @@ function BSD_natim_flash(debug_on);
         else
           stimulus_rect = all_rects(rect_type(counter(count)),:);         
       
-          Screen('DrawTexture', eyeTrack_window, imageTextures{counter(count)}, [], stimulus_rect, 0);
+          Screen('DrawTexture', eyeTrack_window, imageTextures_eyeTrack{counter(count)}, [], stimulus_rect, 0);
           Screen('FillOval', eyeTrack_window, [128 128 128], fillStimulus);
-          Screen('DrawTexture', eyeTrack_window, mask_text(scaleCount), [], mask_rect, 0);
+          Screen('DrawTexture', eyeTrack_window, mask_text_eyeTrack(scaleCount), [], mask_rect, 0);
           Screen('DrawTexture', eyeTrack_window, eyeTrack_imageTexture, [], rects(:,:,pos));      
           Screen('FrameOval',eyeTrack_window,[0 0 255],fix_point_Windowrect,3,3); # to mark fixation window
       
-          Screen('DrawTexture', stimulus_window, imageTextures{counter(count)}, [], stimulus_rect, 0);
+          Screen('DrawTexture', stimulus_window, imageTextures_stimulus{counter(count)}, [], stimulus_rect, 0);
           Screen('FillOval', stimulus_window, [128 128 128], fillStimulus);
+          Screen('DrawTexture', stimulus_window, mask_text_stimulus(scaleCount), [], mask_rect, 0);
           Screen('DrawTexture', stimulus_window, stimulus_imageTexture, [], rects(:,:,pos));
       
           endCounter = count;
           
-          if (blank == 0)
-            waitframes2 = waitframes;
-          endif
-            vbl1 = Screen('Flip', eyeTrack_window, vbl1 + (waitframes2 - 0.5) * ifi1);
-            vbl2 = Screen('Flip', stimulus_window, vbl2 + (waitframes2 - 0.5) * ifi2);
-          endif    
+          vbl1 = Screen('Flip', eyeTrack_window, vbl1 + (waitframes - 0.5) * ifi1);
+          vbl2 = Screen('Flip', stimulus_window, vbl2 + (waitframes - 0.5) * ifi2);
+          # send TTL
+          now = tic();
+          Datapixx('SetDoutValues', 84);
+          Datapixx('RegWrRd');
+          while toc(now) < 0.02
+            # do nothing
+          end
+          Datapixx('SetDoutValues', 20);
+          Datapixx('RegWrRd');
+        endif    
         
         if sqrt((XY(1) - X(pos))^2 + (XY(2) - Y(pos))^2) >= trackWindow      
           # set digital out to 0 for channel XYZ
@@ -497,16 +497,16 @@ function BSD_natim_flash(debug_on);
           on_target_time   = toc(eyeTrack_clock);
         
           Screen('FillRect', eyeTrack_window, grey, [0 0 screenXpixels screenYpixels], 0);  
-          Screen('Flip', eyeTrack_window); 
-        
-          Screen('FillRect', stimulus_window, grey, [0 0 screenXpixels screenYpixels], 0);  
+          Screen('FillRect', stimulus_window, grey, [0 0 screenXpixels screenYpixels], 0);
+          
+          Screen('Flip', eyeTrack_window);              
           Screen('Flip', stimulus_window); 
         
           reward_size_time = toc(eyeTrack_clock);      
           trial_error = 'broke_early';
-          if reward_size_time > min_fixation_time
+          if reward_size_time > min_fixation_duration
             reward_size_time = reward_scaler*sqrt(reward_size_time);
-            # look at this command
+            # turn
             Datapixx('SetDoutValues', 1);
             Datapixx('RegWrRd');
             a = tic();      
@@ -524,7 +524,7 @@ function BSD_natim_flash(debug_on);
         end    
       
         # the animals needs to hold fixation for "min_target_time" before responding
-        if toc(eyeTrack_clock) > max_fixation_time
+        if toc(eyeTrack_clock) > max_fixation_duration
           # set digital out to 0 for channel XYZ
           Datapixx('SetDoutValues', 0);
           Datapixx('RegWrRd');

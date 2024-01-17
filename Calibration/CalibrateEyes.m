@@ -5,7 +5,7 @@ close all;
 clear;
 
 % user defined parameters
-#scaler = 1.5;
+#scaler = 0.5;
 scaler = 0.4;
 stimulus_duration = 1;
 reward_size_time = 0.4;

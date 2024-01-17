@@ -22,10 +22,11 @@ end
 distance = 47;
 pix_per_cm = 36.2;
 va_in_pix  = va2pix(distance,pix_per_cm);
+
 if strcmp(animal,'Wolfjaw')
-  scaler               = 1.25;
+  scaler               = 0.6;
   trackWin_factor      = 2.0;
-  wait_fixation        = 0.75;
+  wait_fixation        = 0.5;
   rewardConsume_period = 2;
   ms                   = 10;
   min_target_time      = 0.5;
@@ -35,7 +36,7 @@ if strcmp(animal,'Wolfjaw')
   gaze_move_time       = 1;
   max_fixation_time    = 4;
   min_fixation_time    = 0.1;
-  reward_scaler = 0.9;
+  reward_scaler = 1.8;
   FR = 120;
   gridSize = 256;
   fix_point_Window_size = 100;
@@ -44,8 +45,8 @@ if strcmp(animal,'Wolfjaw')
   
 elseif strcmp(animal,'Sansa')
   
-  scaler               = 0.4;
-  trackWin_factor      = 1.9;
+  scaler               = 0.5;
+  trackWin_factor      = 2.5;
   wait_fixation        = 0.75;
   rewardConsume_period = 2;
   ms                   = 10;
