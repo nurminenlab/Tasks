@@ -35,7 +35,7 @@ ms                   = 10;
 min_target_time      = 0.025;
 response_wait_min    = 0.025;
 response_wait_max    = 0.025;
-gaze_move_time       = 0.5;
+gaze_move_time       = 0.45;
 response_wait_time   = gaze_move_time;
 max_trs              = 1000;
 
@@ -47,7 +47,7 @@ plateau_pix = plateau_deg*va_in_pixels;
 edge_deg = 0.1;
 edge_pix = edge_deg*va_in_pixels;
 d_target = (plateau_deg + edge_deg + 2.5)*va_in_pixels;
-contrast = 0.8;
+contrast = 0.5;
 reward_scaler = 0.25;
 
 thetas = deg2rad([-45,45,135,225]);

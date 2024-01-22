@@ -9,7 +9,7 @@ function BSD_image_flash(debug_on);
   image_dir = '/home/vpixx/Images/BSD/';
   
   # use mouse instead of eye tracker
-  mouse_track = 1;
+  mouse_track = 0;
   save_records = 0;
   
   animal = 'Sansa';
@@ -34,9 +34,9 @@ function BSD_image_flash(debug_on);
     edge_rolloff_deg  = 0.2;
     stimulus_center = [825 675]; # change this so as to be defined in polar coordinates MAYBE LATER
     
-    image_duration = 1;
+    image_duration = 0.3;
     blank_duration = 1;
-    blank = 1;    
+    blank = 0;    
     waitframes = ceil(image_duration*120);    
     waitframes2 = ceil(blank_duration*120);    
     fill_fixation = 1;    
