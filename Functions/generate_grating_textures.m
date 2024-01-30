@@ -1,4 +1,4 @@
-function grText = generate_grating_textures(gridSize,orientations,pixelsPerPeriod,plateauPixels,edgePixels,windowPointer,screenNumber,contrast)
+function grText = generate_grating_textures(gridSize,orientations,pixelsPerPeriod,windowPointer,screenNumber)
   
 addpath('/home/vpixx/Tasks/Functions/');
 echo off
@@ -7,7 +7,6 @@ orientations = orientations * pi / 180;
 spatialFrequency = 1 / pixelsPerPeriod; 
 radiansPerPixel = spatialFrequency * (2 * pi);
 
-raisedCosineMask = raised_cosine(plateauPixels,edgePixels,gridSize,gridSize,0,0,'R');
 
 black = BlackIndex(windowPointer);  
 white = WhiteIndex(windowPointer);  
@@ -22,8 +21,8 @@ absoluteDifferenceBetweenWhiteAndGray = abs(white - gray);
 for i = 1:length(orientations)
   a=cos(orientations(i))*radiansPerPixel;
   b=sin(orientations(i))*radiansPerPixel;  
-  gratingMatrix(:,:,i) = contrast*sin(a*x+b*y);
-  grayScaleImageMatrix(:,:,i) = gray + absoluteDifferenceBetweenWhiteAndGray*gratingMatrix(:,:,i).*raisedCosineMask;
+  gratingMatrix(:,:,i) = sin(a*x+b*y);
+  grayScaleImageMatrix(:,:,i) = gray + absoluteDifferenceBetweenWhiteAndGray*gratingMatrix(:,:,i);
 end
 
 grText = NaN * ones(size(orientations));

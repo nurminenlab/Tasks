@@ -6,7 +6,7 @@ function trial_records = ring_wedge(debug_on)
   close all;
 
   # use mouse instead of eye tracker
-  mouse_track = 1;
+  mouse_track = 0;
 
   animal = 'Sansa';
   saveSTR = ['/home/vpixx/MonkeyRecords/TrialRecords/',animal,'/','RF-map-wedge-trial_records-',date,'.mat'];
@@ -25,12 +25,13 @@ function trial_records = ring_wedge(debug_on)
     view_distance = 47;
     pix_per_cm = 36.2;
     va_in_pix  = va2pix(view_distance,pix_per_cm);
-    fixation_target_deg = 1.1;    
-    ring_width_deg = 1;
+    Trans_mx_shift = [0 -30]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
     
-    trackWin_deg = 2.2; # diameter
-    waitframes = 7;
-    %turn on/off fixation mask 
+    fixation_target_deg = 1.5;    
+    trackWin_deg = 2.5; # diameter
+    ring_width_deg = 1;    
+    
+    waitframes = 7;    
     fill_fixation = 1;
     wait_fixation        = 0.75;
     rewardConsume_period = 2;
@@ -78,7 +79,7 @@ function trial_records = ring_wedge(debug_on)
     Scale_mx = eye(2);
     Scale_mx(1) = bx(2);
     Scale_mx(4) = by(2);
-    Trans_mx = [bx(1), by(1)]';
+    Trans_mx = [bx(1)+Trans_mx_shift(1), by(1)+Trans_mx_shift(2)]';
   end
   
   % Here we call some default settings for setting up Psychtoolbox
@@ -227,7 +228,7 @@ function trial_records = ring_wedge(debug_on)
         close all;
         sca;
         expt_info.trial_records = trial_records;        
-        save(saveSTR,'trial_records');        
+        save(saveSTR,'expt_info');        
         break;
       end
       
@@ -351,7 +352,7 @@ function trial_records = ring_wedge(debug_on)
         close all;
         sca;
         expt_info.trial_records = trial_records;        
-        save(saveSTR,'trial_records');        
+        save(saveSTR,'expt_info');        
         break;
       end      
     end  
@@ -442,10 +443,10 @@ function trial_records = ring_wedge(debug_on)
         Screen('FillRect', stimulus_window, grey, [0 2000 0 2000], 0);  
         Screen('Flip', stimulus_window); 
         
-        fixation_duration = toc(eyeTrack_clock);      
+        fixation_duration = toc(eyeTrack_clock);
         trial_error = 'broke_early';
         if fixation_duration > min_fixation_duration
-          reward_size_time = reward_scaler*sqrt(reward_size_time);
+          reward_size_time = reward_scaler*sqrt(fixation_duration);
           # look at this command
           Datapixx('SetDoutValues', 1);
           Datapixx('RegWrRd');
@@ -477,8 +478,8 @@ function trial_records = ring_wedge(debug_on)
         Screen('FillRect', stimulus_window, grey, [0 2000 0 2000], 0);  
         Screen('Flip', stimulus_window); 
         
-        reward_size_time = toc(eyeTrack_clock);# set digital out to 0 for channel XYZ
-        reward_size_time = reward_scaler*sqrt(reward_size_time);      
+        fixation_duration = toc(eyeTrack_clock);# set digital out to 0 for channel XYZ
+        reward_size_time = reward_scaler*sqrt(fixation_duration);
         Datapixx('SetDoutValues', 1);
         Datapixx('RegWrRd');
         a = tic();      
@@ -501,7 +502,7 @@ function trial_records = ring_wedge(debug_on)
         close all;
         sca;
         expt_info.trial_records = trial_records;        
-        save(saveSTR,'trial_records');        
+        save(saveSTR,'expt_info');        
         break;
       end    
     end  %   
@@ -512,7 +513,7 @@ function trial_records = ring_wedge(debug_on)
       close all;
       sca; 
       expt_info.trial_records = trial_records;
-      save(saveSTR,'trial_records');     
+      save(saveSTR,'expt_info');     
       break;
     end
     

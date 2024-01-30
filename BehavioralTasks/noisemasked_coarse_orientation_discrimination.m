@@ -1,5 +1,5 @@
 % prepare PsychoToolbox
-addpath('/home/vpixx/repos/Tasks/Functions/');
+addpath('/home/vpixx/Tasks/Functions/');
 AssertOpenGL;
 sca;
 close all;
@@ -15,12 +15,13 @@ saveSTR = [records_folder,animal,'/','noisemasked_coarse_orientation_discriminat
 save_append = 0;
 while exist(saveSTR,'file') == 2
   save_append = save_append + 1;
-  saveSTR = [animal,'TextureTask-trial_records-',date,'_v',num2str(save_append),'.mat'];
+  saveSTR = [records_folder,animal,'/','noisemasked_coarse_orientation_discrimination-trial_records-',date,'_v',num2str(save_append),'.mat'];
 end
 
 distance = 47;
-pix_per_cm = 36.2; # LAURI 
+pix_per_cm = 36.2; 
 va_in_pixels = va2pix(distance,pix_per_cm);
+Trans_mx_shift = [0 0]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
 
 % task parameters
 fix_target_deg       = 2;
@@ -32,26 +33,29 @@ wait_fixation        = 1;
 rewardConsume_period = 2;
 max_fixation_time    = 2;
 ms                   = 10;
-min_target_time      = 0.025;
+min_target_time      = 0.1;
 response_wait_min    = 0.025;
 response_wait_max    = 0.025;
 gaze_move_time       = 0.45;
 response_wait_time   = gaze_move_time;
 max_trs              = 1000;
+wrong_target_abort = 1;
 
-gridSize = 256;
+gridSize = 128;
 orientations = [0,90];
 pix_per_period = 33;
-plateau_deg = 4;
+plateau_deg = 3;
 plateau_pix = plateau_deg*va_in_pixels;
 edge_deg = 0.1;
 edge_pix = edge_deg*va_in_pixels;
-d_target = (plateau_deg + edge_deg + 2.5)*va_in_pixels;
-contrast = 0.5;
+d_target = (plateau_deg + edge_deg + 1)*va_in_pixels;
+contrast = 0.25;
 reward_scaler = 0.25;
 
-thetas = deg2rad([-45,45,135,225]);
-R      = 175;
+thetas_deg = [-45,45,135,225] + 15;
+R_deg  = 4;
+thetas = deg2rad(thetas_deg);
+R      = va_in_pixels*R_deg;
 
 fix_point_Window_size = 150;
 trackMarkerColor = [255,0,0];
@@ -73,7 +77,7 @@ if ~mouse_track
   Scale_mx = eye(2);
   Scale_mx(1) = bx(2);
   Scale_mx(4) = by(2);
-  Trans_mx = [bx(1), by(1)]';
+  Trans_mx = [bx(1)+Trans_mx_shift(1), by(1)+Trans_mx_shift(2)]';
 end
 
 % Here we call some default settings for setting up Psychtoolbox
@@ -181,7 +185,7 @@ while is_running
   
   # target position
   target_pos = randi(4);
-  min_target_time = response_wait_min + (response_wait_max - response_wait_min)*rand();
+  #min_target_time = response_wait_min + (response_wait_max - response_wait_min)*rand();
   
   if tr_ind > 1
     Screen('Flip', eyeTrack_window,0);
@@ -249,10 +253,12 @@ while is_running
   % Draw monkey face
   Screen('DrawTexture', stimulus_window, stimulus_imageTexture, [], rects(:,:,pos));  
   Screen('DrawTexture', eyeTrack_window, eyeTrack_imageTexture, [], rects(:,:,pos));    
-  % Draw fixation window
+  % Draw fixation window  
   Screen('FrameOval',eyeTrack_window, [0 0 255], trackWindow_rect(:,:,pos), 3,3);
+  Datapixx('SetDoutValues', 4);
   stimulusScreen_stimulus_vbl = Screen('Flip', stimulus_window, greyScreen_stimulus_vbl + rewardConsume_period);
   stimulusScreen_eyeTrack_vbl = Screen('Flip', eyeTrack_window, greyScreen_eyeTrack_vbl + rewardConsume_period,1);
+  Datapixx('RegWrRd');
   
   wait_fixation_clock = tic();
   while toc(wait_fixation_clock) < wait_fixation;    
@@ -278,19 +284,19 @@ while is_running
       reaction_time = toc(wait_fixation_clock);
       eyeTrack_clock = tic();      
       
-      Screen('FillRect', eyeTrack_window, grey, trackWindow_rect(:,:,pos));           
+      #Screen('FillRect', eyeTrack_window, grey, trackWindow_rect(:,:,pos));           
       Screen('FillOval', eyeTrack_window,[0 0 255],fix_point_rect);       
       Screen('DrawTextures', eyeTrack_window, grText_iTrack,[],txt_rects);
       Screen('FrameOval',eyeTrack_window,[0 0 255],fix_point_Windowrect,3,3);
       
-      Screen('FillRect', stimulus_window, grey, rects(:,:,pos));           
+      #Screen('FillRect', stimulus_window, grey, rects(:,:,pos));           
       Screen('FillOval', stimulus_window,[0 0 255],fix_point_rect);
-      Screen('DrawTextures', stimulus_window, grText,[],txt_rects);      
+      Screen('DrawTextures', stimulus_window, grText,[],txt_rects);
       
-      # write(s, "stimulus information")
-      
-      Screen('Flip', stimulus_window, greyScreen_stimulus_vbl + rewardConsume_period,1);     
-      Screen('Flip', eyeTrack_window, greyScreen_stimulus_vbl + rewardConsume_period,1);
+      Datapixx('SetDoutValues', 20);          
+      Screen('Flip', stimulus_window,0,1);     
+      Screen('Flip', eyeTrack_window,0,1);
+      Datapixx('RegWrRd');
       break;
     end
       
@@ -335,12 +341,12 @@ while is_running
       waiting_for_response = 1;
       on_target_time = toc(eyeTrack_clock);
       trial_error = 'no_error';
-      Screen('FillRect', eyeTrack_window, grey, trackWindow_rect(:,:,pos));
-      Screen('DrawTextures', eyeTrack_window, grText_iTrack,[],txt_rects);
+      Screen('FillRect', eyeTrack_window, grey, trackWindow_rect(:,:,pos)); # blank fixation target?
+      #Screen('DrawTextures', eyeTrack_window, grText_iTrack,[],txt_rects);
       Screen('FrameOval',eyeTrack_window,[0 0 255],target_MarkRect,3,3);
       
-      Screen('FillRect', stimulus_window, grey, rects(:,:,pos));
-      Screen('DrawTextures', stimulus_window, grText,[],txt_rects);
+      Screen('FillRect', stimulus_window, grey, rects(:,:,pos)); # blank fixation target?
+      #Screen('DrawTextures', stimulus_window, grText,[],txt_rects);
       Screen('Flip', stimulus_window, 0);     
       Screen('Flip', eyeTrack_window, 0,1);
       response_time_clock = tic();
@@ -405,25 +411,26 @@ while is_running
       break;
     end
     
-    if 0
-    if sqrt((XY(1) - not_target_pos_X(1))^2 + (XY(2) - not_target_pos_Y(1))^2) < d_target
-      waiting_for_response = 0;
-      trial_error = 'miss';
-      break;
+    if wrong_target_abort
+      if sqrt((XY(1) - not_target_pos_X(1))^2 + (XY(2) - not_target_pos_Y(1))^2) < d_target/2
+        waiting_for_response = 0;
+        trial_error = 'wrong_target';
+        break;
+      end
+      
+      if sqrt((XY(1) - not_target_pos_X(2))^2 + (XY(2) - not_target_pos_Y(2))^2) < d_target/2
+        waiting_for_response = 0;
+        trial_error = 'wrong_target';
+        break;
+      end
+      
+      if sqrt((XY(1) - not_target_pos_X(3))^2 + (XY(2) - not_target_pos_Y(3))^2) < d_target/2
+        waiting_for_response = 0;
+        trial_error = 'wrong_target';
+        break;
+      end
     end
-    
-    if sqrt((XY(1) - not_target_pos_X(2))^2 + (XY(2) - not_target_pos_Y(2))^2) < d_target
-      waiting_for_response = 0;
-      trial_error = 'miss';
-      break;
-    end
-    
-    if sqrt((XY(1) - not_target_pos_X(3))^2 + (XY(2) - not_target_pos_Y(3))^2) < d_target
-      waiting_for_response = 0;
-      trial_error = 'miss';
-      break;
-    end
-    end    
+  
     # max length of trial
     if toc(response_time_clock) > response_wait_time      
       waiting_for_response = 0; 

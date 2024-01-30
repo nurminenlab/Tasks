@@ -10,7 +10,7 @@ function BSD_image_flash(debug_on);
   
   # use mouse instead of eye tracker
   mouse_track = 0;
-  save_records = 0;
+  save_records = 1;
   
   animal = 'Sansa';
   saveSTR = ['/home/vpixx/MonkeyRecords/TrialRecords/', animal,'/','BSD-image-flash-trial_records-',date,'.mat'];
@@ -21,14 +21,15 @@ function BSD_image_flash(debug_on);
   end  
 
   % user defined parameters
-  if strcmp(animal,'Wolfjaw-')    
+  if strcmp(animal,'Wolfjaw')    
     # under development
-  elseif strcmp(animal,'Sansa')
     distance = 47;
     pix_per_cm = 36.2;
     va_in_pix  = va2pix(distance,pix_per_cm);
-    fixation_target_deg = 2;      
-    trackWin_deg = 3;
+    Trans_mx_shift = [0 0]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
+    
+    fixation_target_deg = 1.6;      
+    trackWin_deg = 2.2;
    
     stimulus_size_deg = [4,16];    
     edge_rolloff_deg  = 0.2;
@@ -48,7 +49,41 @@ function BSD_image_flash(debug_on);
     max_trs              = 10000;    
     max_fixation_duration    = 24;
     min_fixation_duration    = 0.1;
-    reward_scaler = 0.9;
+    reward_scaler = 0.6;
+    FR = 120;    
+    fix_point_Window_size = 100;
+    trackMarkerColor = [255,0,0];
+    gaze_position = nan*ones(2,FR*ceil((wait_fixation+max_fixation_duration)));
+  
+  elseif strcmp(animal,'Sansa')
+    
+    distance = 47;
+    pix_per_cm = 36.2;
+    va_in_pix  = va2pix(distance,pix_per_cm);
+    Trans_mx_shift = [0 -30]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
+    
+    fixation_target_deg = 1.5;      
+    trackWin_deg = 2.3;
+   
+    stimulus_size_deg = [4,16];    
+    edge_rolloff_deg  = 0.2;
+    stimulus_center = [825 675]; # change this so as to be defined in polar coordinates MAYBE LATER
+    
+    image_duration = 0.3;
+    blank_duration = 1;
+    blank = 0;    
+    waitframes = ceil(image_duration*120);    
+    waitframes2 = ceil(blank_duration*120);    
+    fill_fixation = 1;    
+    black_white = 0;
+    
+    wait_fixation        = 0.75;
+    rewardConsume_period = 2;
+    ms                   = 10;    
+    max_trs              = 10000;    
+    max_fixation_duration    = 24;
+    min_fixation_duration    = 0.1;
+    reward_scaler = 0.7;
     FR = 120;    
     fix_point_Window_size = 100;
     trackMarkerColor = [255,0,0];
@@ -79,9 +114,9 @@ function BSD_image_flash(debug_on);
   
   if mouse_track
     XY = ones(2,1)*nan;
-  end
+  end  
   
-  Datapixx('Open')
+  Datapixx('Open');
   adcRate = 1e3;
   baseBuffAddr = 0;
   minStreamFrames = 15;
@@ -94,7 +129,7 @@ function BSD_image_flash(debug_on);
     Scale_mx = eye(2);
     Scale_mx(1) = bx(2);
     Scale_mx(4) = by(2);
-    Trans_mx = [bx(1), by(1)]';
+    Trans_mx = [bx(1)+Trans_mx_shift(1), by(1)+Trans_mx_shift(2)]';
   end
   
   % Here we call some default settings for setting up Psychtoolbox
@@ -243,7 +278,7 @@ function BSD_image_flash(debug_on);
   fix_point_Window = fix_point_Window/2;
   
   tr_ind = 0;
-  tr = struct();
+  trial_records = struct();
   is_running = 1;
   conditions = ['5'];
   pos = 5;
@@ -321,6 +356,7 @@ function BSD_image_flash(debug_on);
           Datapixx('Close');      
           close all;
           sca;
+          expt_info.trial_records = trial_records;
           if save_records;
             save(saveSTR,'expt_info'); 
           endif
