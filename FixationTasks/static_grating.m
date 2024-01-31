@@ -1,4 +1,4 @@
-function trial_records = RF_map(debug_on)
+function trial_records = static_grating(debug_on)
 % prepare PsychoToolbox
 addpath('/home/vpixx/Tasks/Functions/');
 AssertOpenGL;
@@ -8,9 +8,9 @@ close all;
 PsychDefaultSetup(2);
 
 # use mouse instead of eye tracker
-mouse_track = 0;
+mouse_track = 1;
 
-animal = 'Wolfjaw';
+animal = 'Sansa';
 saveSTR = [animal,'RF-map-trial_records-',date,'.mat'];
 save_append = 0;
 while exist(saveSTR,'file') == 2
@@ -36,7 +36,7 @@ if strcmp(animal,'Wolfjaw')
   gaze_move_time       = 1;
   max_fixation_time    = 4;
   min_fixation_time    = 0.1;
-  reward_scaler = 0.7;
+  reward_scaler = 0.6;
   FR = 120;
   gridSize = 256;
   fix_point_Window_size = 100;
@@ -45,8 +45,8 @@ if strcmp(animal,'Wolfjaw')
   
 elseif strcmp(animal,'Sansa')
   
-  scaler               = 0.4;
-  trackWin_factor      = 2.5;
+  scaler               = 0.6;
+  trackWin_factor      = 2.0;
   wait_fixation        = 0.75;
   rewardConsume_period = 2;
   ms                   = 10;
@@ -59,7 +59,7 @@ elseif strcmp(animal,'Sansa')
   min_fixation_time    = 0.1;
   reward_scaler = 0.4;
   FR = 120;
-  gridSize = 256;
+  gridSize = 128;
   fix_point_Window_size = 100;
   trackMarkerColor = [255,0,0];
   gaze_position = nan*ones(2,FR*ceil((wait_fixation+max_fixation_time)));
@@ -68,7 +68,7 @@ else
 end
 
 # grating parameters
-grating_gridSize = 256;
+grating_gridSize = 64;
 orientations = [0:15:180];
 pixelsPerPeriod = 33;
 plateau_pix = 3*va_in_pix;
@@ -154,21 +154,16 @@ end
 stimulus_imageTexture = Screen('MakeTexture', stimulus_window, theImage);
 eyeTrack_imageTexture = Screen('MakeTexture', eyeTrack_window, theImage);
 
-# grating
-grating_gridSize = 256;
-orientations = [0:15:180];
-pixelsPerPeriod = 33;
-plateauCycles = 3;
-edgeCycles = 0.25;
-contrast = 0.8;
+
 windowPointer = stimulus_window;
 
 grating_rect  = [1 1 grating_gridSize grating_gridSize];
 [gXoff,gYoff] = pol2cart(deg2rad(135),135);
 grating_rect  = CenterRectOnPoint(grating_rect,screenXpixels/2+gXoff,screenYpixels/2+gYoff);
 
-grText     = generate_grating_textures(gridSize,orientations,pixelsPerPeriod,plateau_pix,edge_pix,stimulus_window,stimulus_screenNumber,contrast);
-grText_iTR = generate_grating_textures(gridSize,orientations,pixelsPerPeriod,plateau_pix,edge_pix,eyeTrack_window,eyeTrack_screenNumber,contrast);
+grText     = generate_grating_textures(gridSize,orientations,pixelsPerPeriod,stimulus_window,stimulus_screenNumber);
+grText_iTR = generate_grating_textures(gridSize,orientations,pixelsPerPeriod,eyeTrack_window,eyeTrack_screenNumber);
+
 
 fix_point_rect = [1 1 10 10];
 fix_point_rect = CenterRectOnPoint(fix_point_rect, screenXpixels/2, screenYpixels/2);

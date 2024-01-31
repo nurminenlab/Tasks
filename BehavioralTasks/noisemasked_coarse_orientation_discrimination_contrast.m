@@ -9,7 +9,7 @@ mouse_track = 0;
 debug_on = 0;
 save_records = 1;
 
-animal = 'Sansa';
+animal = 'Wolfjaw';
 
 records_folder = '/home/vpixx/MonkeyRecords/TrialRecords/';
 saveSTR = [records_folder,animal,'/','noisemasked_coarse_orientation_discrimination-trial_records-',date,'.mat'];
@@ -19,12 +19,12 @@ while exist(saveSTR,'file') == 2
   saveSTR = [records_folder,animal,'/','noisemasked_coarse_orientation_discrimination-trial_records-',date,'_v',num2str(save_append),'.mat'];
 end
 
-
 distance = 47;
 pix_per_cm = 36.2; 
 va_in_pixels = va2pix(distance,pix_per_cm);
 
-if animal == 'Sansa'
+if strcmp(animal,'Sansa')
+  
   Trans_mx_shift = [0 -30]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
   
   % task parameters
@@ -37,15 +37,15 @@ if animal == 'Sansa'
   wait_fixation        = 1;
   rewardConsume_period = 2;
   max_fixation_time    = 2;
-  min_target_time      = 0.2;  
-  gaze_move_time       = 0.45;
+  min_target_time      = 0.025;  
+  gaze_move_time       = 15;
   response_wait_time   = gaze_move_time;
   max_trs              = 1000;
-  wrong_target_abort = 1;
+  wrong_target_abort = 0;
   
   gridSize = 128;
   contrasts = [0.01 0.02 0.04 0.08 0.16 0.32];
-  contrasts_idx = [1 1 2 2 3 3 4 4 5 6]; # workaround for weighted randomization of contrast  
+  contrasts_idx = [1 1 2 2 3 3 4 4 5 6]; # workaround for weighted randomization of contrast
   orientations = [0,90];
   pix_per_period = 33;
   plateau_deg = 3;
@@ -54,14 +54,59 @@ if animal == 'Sansa'
   edge_pix = edge_deg*va_in_pixels;  
   d_target = (plateau_deg + edge_deg + d_target_extra)*va_in_pixels;
   reward_scaler = 0.5;
+  animal_code = 'MM001';  
+  
+elseif strcmp(animal,'Wolfjaw')
+  
+  Trans_mx_shift = [0 0]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
+  
+  % task parameters
+  fix_target_deg       = 2;
+  fix_target_pix       = fix_target_deg*va_in_pixels;
+  track_win_deg        = 3;
+  track_win_pix        = track_win_deg*va_in_pixels;
+  d_target_extra       = 1.5;
+  
+  wait_fixation        = 1;
+  rewardConsume_period = 2;
+  max_fixation_time    = 2;
+  min_target_time      = 0.025;  
+  gaze_move_time       = 15;
+  response_wait_time   = gaze_move_time;
+  max_trs              = 1000;
+  wrong_target_abort = 0;
+  
+  gridSize = 128;
+  contrasts = [1];
+  contrasts_idx = [1]; # workaround for weighted randomization of contrast
+  orientations = [0,90];
+  pix_per_period = 33;
+  plateau_deg = 3;
+  plateau_pix = plateau_deg*va_in_pixels;
+  edge_deg = 0.1;
+  edge_pix = edge_deg*va_in_pixels;  
+  d_target = (plateau_deg + edge_deg + d_target_extra)*va_in_pixels;
+  reward_scaler = 0.5;
+  animal_code = 'MM004';
+  
+else
+
+  display('ERROR: No such animal')  
+  return;
+
 endif
 
-thetas_deg = [-45,45,135,225] + 25;
+thetas_deg = [-45,45,135,225] + 0;
 R_deg  = 4;
 thetas = deg2rad(thetas_deg);
 R      = va_in_pixels*R_deg;
 ms     = 10;
 
+expt_info.project              = 'inhibitory-neuron-opto';
+expt_info.experiment           = 'masked_discrimination';
+expt_info.date                 = date();
+expt_info.animal               = animal;
+expt_info.animal_code          = animal_code;
 expt_info.fix_target_deg       = fix_target_deg;
 expt_info.track_win_deg        = track_win_deg;
 expt_info.d_target_extra       = d_target_extra;

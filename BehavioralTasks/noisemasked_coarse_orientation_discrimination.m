@@ -5,14 +5,16 @@ sca;
 close all;
 
 # use mouse instead of eye tracker
-mouse_track = 0;
+mouse_track = 1;
 debug_on = 0;
+save_records = 0;
 
-animal = 'Sansa';
+animal = 'Wolfjaw';
 
 records_folder = '/home/vpixx/MonkeyRecords/TrialRecords/';
 saveSTR = [records_folder,animal,'/','noisemasked_coarse_orientation_discrimination-trial_records-',date,'.mat'];
 save_append = 0;
+
 while exist(saveSTR,'file') == 2
   save_append = save_append + 1;
   saveSTR = [records_folder,animal,'/','noisemasked_coarse_orientation_discrimination-trial_records-',date,'_v',num2str(save_append),'.mat'];
@@ -21,43 +23,120 @@ end
 distance = 47;
 pix_per_cm = 36.2; 
 va_in_pixels = va2pix(distance,pix_per_cm);
-Trans_mx_shift = [0 0]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
 
-% task parameters
-fix_target_deg       = 2;
-fix_target_pix       = fix_target_deg*va_in_pixels;
-track_win_deg        = 3;
-track_win_pix        = track_win_deg*va_in_pixels;
+if strcmp(animal,'Sansa')
+  
+  Trans_mx_shift = [0 -30]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
+  
+  % task parameters
+  fix_target_deg       = 2;
+  fix_target_pix       = fix_target_deg*va_in_pixels;
+  track_win_deg        = 3;
+  track_win_pix        = track_win_deg*va_in_pixels;
+  d_target_extra       = 1.5;
+  
+  wait_fixation        = 1;
+  rewardConsume_period = 2;
+  max_fixation_time    = 2;
+  min_target_time      = 0.2;  
+  gaze_move_time       = 0.45;
+  response_wait_time   = gaze_move_time;
+  max_trs              = 1000;
+  wrong_target_abort = 1;
+  
+  gridSize = 128;
+  #contrasts = [0.01 0.02 0.04 0.08 0.16 0.32]; # target contrast
+  #contrasts_idx = [1 1 2 2 3 3 4 4 5 6]; # workaround for weighted randomization of contrast
+  contrasts = [0.1];
+  contrasts_idx = [1];
+  mask_contrast = 0.68;
+  orientations = [0,90];
+  pix_per_period = 33;
+  plateau_deg = 3;
+  plateau_pix = plateau_deg*va_in_pixels;
+  edge_deg = 0.1;
+  edge_pix = edge_deg*va_in_pixels;  
+  d_target = (plateau_deg + edge_deg + d_target_extra)*va_in_pixels;
+  reward_scaler = 0.5;
+  animal_code = 'MM001';  
+  
+elseif strcmp(animal,'Wolfjaw')
+  
+  Trans_mx_shift = [0 0]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
+  
+  % task parameters
+  fix_target_deg       = 2;
+  fix_target_pix       = fix_target_deg*va_in_pixels;
+  track_win_deg        = 3;
+  track_win_pix        = track_win_deg*va_in_pixels;
+  d_target_extra       = 1.5;
+  
+  wait_fixation        = 1;
+  rewardConsume_period = 2;
+  max_fixation_time    = 2;
+  min_target_time      = 0.2;  
+  gaze_move_time       = 0.45;
+  response_wait_time   = gaze_move_time;
+  max_trs              = 1000;
+  wrong_target_abort = 1;
+  
+  gridSize = 128;
+  contrasts = [1]; # target contrast
+  contrasts_idx = [1]; # workaround for weighted randomization of contrast
+  mask_contrast = 0;
+  orientations = [0,90];
+  pix_per_period = 33;
+  plateau_deg = 3;
+  plateau_pix = plateau_deg*va_in_pixels;
+  edge_deg = 0.1;
+  edge_pix = edge_deg*va_in_pixels;  
+  d_target = (plateau_deg + edge_deg + d_target_extra)*va_in_pixels;
+  reward_scaler = 0.5;
+  animal_code = 'MM004';
+  
+else
 
-wait_fixation        = 1;
-rewardConsume_period = 2;
-max_fixation_time    = 2;
-ms                   = 10;
-min_target_time      = 0.1;
-response_wait_min    = 0.025;
-response_wait_max    = 0.025;
-gaze_move_time       = 0.45;
-response_wait_time   = gaze_move_time;
-max_trs              = 1000;
-wrong_target_abort = 1;
+  display('ERROR: No such animal');
+  return;
 
-gridSize = 128;
-orientations = [0,90];
-pix_per_period = 33;
-plateau_deg = 3;
-plateau_pix = plateau_deg*va_in_pixels;
-edge_deg = 0.1;
-edge_pix = edge_deg*va_in_pixels;
-d_target = (plateau_deg + edge_deg + 1)*va_in_pixels;
-contrast = 0.25;
-reward_scaler = 0.25;
+endif
 
-thetas_deg = [-45,45,135,225] + 15;
+if any((contrasts + mask_contrast) > 1)
+  display('ERROR: Total contrast (mask + target cannot exceed 100%)');
+  return;
+endif
+
+thetas_deg = [-45,45,135,225] + 25;
 R_deg  = 4;
 thetas = deg2rad(thetas_deg);
 R      = va_in_pixels*R_deg;
+ms     = 10;
 
-fix_point_Window_size = 150;
+expt_info.project              = 'inhibitory-neuron-opto';
+expt_info.experiment           = 'masked_discrimination';
+expt_info.date                 = date();
+expt_info.animal               = animal;
+expt_info.animal_code          = animal_code;
+expt_info.fix_target_deg       = fix_target_deg;
+expt_info.track_win_deg        = track_win_deg;
+expt_info.d_target_extra       = d_target_extra;
+expt_info.wait_fixation        = wait_fixation;
+expt_info.rewardConsume_period = rewardConsume_period;
+expt_info.max_fixation_time    = max_fixation_time;
+expt_info.min_target_time      = min_target_time;
+expt_info.gaze_move_time       = gaze_move_time;
+expt_info.response_wait_time   = response_wait_time;
+expt_info.wrong_target_abort   = wrong_target_abort;
+expt_info.contrasts            = contrasts;
+expt_info.contrasts_idx        = contrasts_idx;
+expt_info.mask_contrast        = mask_contrast;
+expt_info.orientations         = orientations;
+expt_info.pix_per_period       = pix_per_period
+expt_info.plateau_deg          = plateau_deg;
+expt_info.edge_deg             = edge_deg;
+expt_info.reward_scaler        = reward_scaler;
+
+fix_point_Window_size = track_win_pix;
 trackMarkerColor = [255,0,0];
 
 if mouse_track
@@ -104,6 +183,8 @@ inc = white - grey;
 stimulus_window = Screen('OpenWindow',stimulus_screenNumber,grey);
 eyeTrack_window = Screen('OpenWindow',eyeTrack_screenNumber,grey);
 windowPointer = stimulus_window;
+Screen('BlendFunction', eyeTrack_window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
+Screen('BlendFunction', stimulus_window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
 
 % Get the size of the on screen window, these are the same for both screens
 [screenXpixels, screenYpixels] = Screen('WindowSize',stimulus_window);
@@ -155,15 +236,36 @@ for i = 1:length(Xoff)
   txt_rects(:,i) = round(CenterRectOnPoint(txt_rect, screenXpixels/2+Xoff(i), screenYpixels/2+Yoff(i)));
 end
 
-grText_all     = generate_grating_textures(gridSize,orientations,pix_per_period,plateau_pix,edge_pix,stimulus_window,stimulus_screenNumber,contrast);
-grText_all_iTrack = generate_grating_textures(gridSize,orientations,pix_per_period,plateau_pix,edge_pix,eyeTrack_window,eyeTrack_screenNumber,contrast);
+# generate gratings
+grText_all     = generate_grating_textures(gridSize,orientations,pix_per_period,stimulus_window,stimulus_screenNumber);
+grText_all_iTrack = generate_grating_textures(gridSize,orientations,pix_per_period,eyeTrack_window,eyeTrack_screenNumber);
+
+# generate cosine masks 
+alpha_mask = ones(gridSize,gridSize,2)*grey;
+cosine_mask_text_eyeTrack = NaN*ones(1,length(contrasts));  
+cosine_mask_text_stimulus = NaN*ones(1,length(contrasts));
+#contrasts = contrasts./(1-mask_contrast);
+for i = 1:length(contrasts)    
+    [cos_window] = 255 - contrasts(i)*255*raised_cosine(plateau_pix,edge_pix,gridSize,gridSize,0,0,'R');  
+    alpha_mask(:,:,2) = cos_window;    
+    cosine_mask_text_eyeTrack(i) = Screen('MakeTexture', eyeTrack_window, alpha_mask);
+    cosine_mask_text_stimulus(i) = Screen('MakeTexture', stimulus_window, alpha_mask);
+end
+
+# generate noise masks 
+noise_mask = rand(gridSize,gridSize,2)*255;
+noise_mask(:,:,2) = mask_contrast*255*raised_cosine(plateau_pix,edge_pix,gridSize,gridSize,0,0,'R');
+mask_text_eyeTrack = Screen('MakeTexture', eyeTrack_window, noise_mask);
+mask_text_stimulus = Screen('MakeTexture', stimulus_window, noise_mask);
+    
 
 tr_ind = 0;
-tr = struct();
+trial_records = struct();
 is_running = 1;
 conditions = ['5'];
 pos = 5;
 stim = 'center';
+trial_contrast = 1;
 
 KbStrokeWait();
 if ~mouse_track
@@ -245,7 +347,10 @@ while is_running
       Datapixx('Close');      
       close all;
       sca;
-      save(saveSTR,'trial_records');
+      if save_records
+        expt_info.trial_records = trial_records;
+        save(saveSTR,'trial_records');
+      endif      
       break;
     end
   end  %
@@ -256,7 +361,7 @@ while is_running
   % Draw fixation window  
   Screen('FrameOval',eyeTrack_window, [0 0 255], trackWindow_rect(:,:,pos), 3,3);
   Datapixx('SetDoutValues', 4);
-  stimulusScreen_stimulus_vbl = Screen('Flip', stimulus_window, greyScreen_stimulus_vbl + rewardConsume_period);
+  stimulusScreen_stimulus_vbl = Screen('Flip', stimulus_window, greyScreen_stimulus_vbl + rewardConsume_period,1);
   stimulusScreen_eyeTrack_vbl = Screen('Flip', eyeTrack_window, greyScreen_eyeTrack_vbl + rewardConsume_period,1);
   Datapixx('RegWrRd');
   
@@ -281,17 +386,22 @@ while is_running
     
     if sqrt((XY(1) - X(pos))^2 + (XY(2) - Y(pos))^2) < trackWindow
       on_target = 1;
-      reaction_time = toc(wait_fixation_clock);
+      fixation_reaction_time = toc(wait_fixation_clock);
       eyeTrack_clock = tic();      
       
+      contrast = contrasts(contrasts_idx(trial_contrast));
       #Screen('FillRect', eyeTrack_window, grey, trackWindow_rect(:,:,pos));           
-      Screen('FillOval', eyeTrack_window,[0 0 255],fix_point_rect);       
+      #Screen('FillOval', eyeTrack_window,[0 0 255],fix_point_rect);       
       Screen('DrawTextures', eyeTrack_window, grText_iTrack,[],txt_rects);
-      Screen('FrameOval',eyeTrack_window,[0 0 255],fix_point_Windowrect,3,3);
+      Screen('DrawTextures', eyeTrack_window, repmat(cosine_mask_text_eyeTrack(contrasts_idx(trial_contrast)),1,4),[],txt_rects);
+      Screen('DrawTextures', eyeTrack_window, repmat(mask_text_eyeTrack,1,4),[],txt_rects);
+      Screen('FrameOval',eyeTrack_window,[0 0 255],fix_point_Windowrect,3,3);      
       
       #Screen('FillRect', stimulus_window, grey, rects(:,:,pos));           
-      Screen('FillOval', stimulus_window,[0 0 255],fix_point_rect);
+      #Screen('FillOval', stimulus_window,[0 0 255],fix_point_rect);
       Screen('DrawTextures', stimulus_window, grText,[],txt_rects);
+      Screen('DrawTextures', stimulus_window, repmat(cosine_mask_text_stimulus(contrasts_idx(trial_contrast)),1,4),[],txt_rects);
+      Screen('DrawTextures', stimulus_window, repmat(mask_text_stimulus,1,4),[],txt_rects);
       
       Datapixx('SetDoutValues', 20);          
       Screen('Flip', stimulus_window,0,1);     
@@ -361,7 +471,11 @@ while is_running
       is_running = 0;      
       close all;
       sca;
-      save(saveSTR,'trial_records');
+      if save_records
+        expt_info.trial_records = trial_records;
+        save(saveSTR,'trial_records');
+      endif
+      
       break;
     end    
   end  %
@@ -407,26 +521,66 @@ while is_running
       Screen('Flip', eyeTrack_window, 0,1);
       reward_time_clock = tic();
       tracking_reward = 1;
+      
       trial_error = 'hit';
+      selected_pos_X = target_pos_X;
+      selected_pos_Y = target_pos_Y;
+      reaction_time = toc(response_time_clock);
+      
+      trial_contrast = trial_contrast + 1;
+      if trial_contrast > length(contrasts_idx)
+        trial_contrast = 1;
+        contrasts_idx = contrasts_idx(randperm(length(contrasts_idx)));        
+      endif
       break;
     end
     
     if wrong_target_abort
       if sqrt((XY(1) - not_target_pos_X(1))^2 + (XY(2) - not_target_pos_Y(1))^2) < d_target/2
         waiting_for_response = 0;
+        
         trial_error = 'wrong_target';
+        selected_pos_X = not_target_pos_X(1);
+        selected_pos_Y = not_target_pos_Y(1);
+        reaction_time = toc(response_time_clock);
+        
+        trial_contrast = trial_contrast + 1;
+        if trial_contrast > length(contrasts_idx)
+          trial_contrast = 1;
+          contrasts_idx = contrasts_idx(randperm(length(contrasts_idx)));        
+        endif
         break;
       end
       
       if sqrt((XY(1) - not_target_pos_X(2))^2 + (XY(2) - not_target_pos_Y(2))^2) < d_target/2
         waiting_for_response = 0;
+        
         trial_error = 'wrong_target';
+        selected_pos_X = not_target_pos_X(2);
+        selected_pos_Y = not_target_pos_Y(2);
+        reaction_time = toc(response_time_clock);
+        
+        trial_contrast = trial_contrast + 1;
+        if trial_contrast > length(contrasts_idx)
+          trial_contrast = 1;
+          contrasts_idx = contrasts_idx(randperm(length(contrasts_idx)));        
+        endif
         break;
       end
       
       if sqrt((XY(1) - not_target_pos_X(3))^2 + (XY(2) - not_target_pos_Y(3))^2) < d_target/2
         waiting_for_response = 0;
+        
         trial_error = 'wrong_target';
+        selected_pos_X = not_target_pos_X(3);
+        selected_pos_Y = not_target_pos_Y(3);
+        reaction_time = toc(response_time_clock);
+        
+        trial_contrast = trial_contrast + 1;
+        if trial_contrast > length(contrasts_idx)
+          trial_contrast = 1;
+          contrasts_idx = contrasts_idx(randperm(length(contrasts_idx)));        
+        endif
         break;
       end
     end
@@ -434,7 +588,15 @@ while is_running
     # max length of trial
     if toc(response_time_clock) > response_wait_time      
       waiting_for_response = 0; 
-      trial_error = 'no_response';     
+      trial_error = 'no_response'; 
+      fixation_reaction_time  = NaN;
+      reaction_time  = NaN;
+      on_target_time = NaN; 
+      trial_error  = NaN;
+      target_pos_X = NaN;
+      target_pos_Y = NaN;
+      selected_pos_X = NaN;
+      selected_pos_Y = NaN;    
       break;
     end 
       
@@ -446,7 +608,10 @@ while is_running
       is_running = 0;      
       close all;
       sca;
-      save(saveSTR,'trial_records');
+      if save_records
+        expt_info.trial_records = trial_records;
+        save(saveSTR,'trial_records');
+      endif      
       break;
     end    
   end  %
@@ -513,7 +678,10 @@ while is_running
       is_running = 0;      
       close all;
       sca;
-      save(saveSTR,'trial_records');
+      if save_records
+        expt_info.trial_records = trial_records;
+        save(saveSTR,'trial_records');
+      endif      
       break;
     end    
   end  %  
@@ -523,7 +691,10 @@ while is_running
       is_running = 0;      
       close all;
       sca;
-      save(saveSTR,'trial_records');
+      if save_records
+        expt_info.trial_records = trial_records;
+        save(saveSTR,'trial_records');
+      endif      
       break;
   end
  
@@ -531,9 +702,15 @@ while is_running
   trial_records(tr_ind).stimulus = stimulus_image;
   trial_records(tr_ind).positionX = X(pos);
   trial_records(tr_ind).positionY = Y(pos);
+  trial_records(tr_ind).fixation_reaction_time  = fixation_reaction_time;
   trial_records(tr_ind).reaction_time  = reaction_time;
   trial_records(tr_ind).on_target_time = on_target_time; 
-  trial_records(tr_ind).trial_error = trial_error; 
+  trial_records(tr_ind).trial_error  = trial_error;
+  trial_records(tr_ind).target_pos_X = target_pos_X;
+  trial_records(tr_ind).target_pos_Y = target_pos_Y;
+  trial_records(tr_ind).selected_pos_X = selected_pos_X;
+  trial_records(tr_ind).selected_pos_Y = selected_pos_Y;
+  trial_records(tr_ind).contrast = contrast;
   
   if tr_ind >= max_trs
     is_running = 0;

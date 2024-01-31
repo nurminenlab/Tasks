@@ -29,7 +29,7 @@ function BSD_image_flash(debug_on);
     Trans_mx_shift = [0 0]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
     
     fixation_target_deg = 1.6;      
-    trackWin_deg = 2.2;
+    trackWin_deg = 2.5;
    
     stimulus_size_deg = [4,16];    
     edge_rolloff_deg  = 0.2;
@@ -60,7 +60,7 @@ function BSD_image_flash(debug_on);
     distance = 47;
     pix_per_cm = 36.2;
     va_in_pix  = va2pix(distance,pix_per_cm);
-    Trans_mx_shift = [0 -30]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
+    Trans_mx_shift = [15 -30]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
     
     fixation_target_deg = 1.5;      
     trackWin_deg = 2.3;
