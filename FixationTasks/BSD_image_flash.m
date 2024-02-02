@@ -12,7 +12,7 @@ function BSD_image_flash(debug_on);
   mouse_track = 0;
   save_records = 1;
   
-  animal = 'Sansa';
+  animal = 'Wolfjaw';
   saveSTR = ['/home/vpixx/MonkeyRecords/TrialRecords/', animal,'/','BSD-image-flash-trial_records-',date,'.mat'];
   save_append = 0;
   while exist(saveSTR,'file') == 2;
@@ -26,10 +26,10 @@ function BSD_image_flash(debug_on);
     distance = 47;
     pix_per_cm = 36.2;
     va_in_pix  = va2pix(distance,pix_per_cm);
-    Trans_mx_shift = [0 0]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
+    Trans_mx_shift = [0 -30]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
     
-    fixation_target_deg = 1.6;      
-    trackWin_deg = 2.5;
+    fixation_target_deg = 3;      
+    trackWin_deg = 3.5;
    
     stimulus_size_deg = [4,16];    
     edge_rolloff_deg  = 0.2;
@@ -60,22 +60,22 @@ function BSD_image_flash(debug_on);
     distance = 47;
     pix_per_cm = 36.2;
     va_in_pix  = va2pix(distance,pix_per_cm);
-    Trans_mx_shift = [15 -30]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
+    Trans_mx_shift = [30 -30]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
+    fill_fixation = 1;    
+    black_white = 0;
     
     fixation_target_deg = 1.5;      
-    trackWin_deg = 2.3;
+    trackWin_deg = 2.5;
    
     stimulus_size_deg = [4,16];    
     edge_rolloff_deg  = 0.2;
     stimulus_center = [825 675]; # change this so as to be defined in polar coordinates MAYBE LATER
     
     image_duration = 0.3;
-    blank_duration = 1;
+    blank_duration = 0.5;
     blank = 0;    
     waitframes = ceil(image_duration*120);    
-    waitframes2 = ceil(blank_duration*120);    
-    fill_fixation = 1;    
-    black_white = 0;
+    waitframes2 = ceil(blank_duration*120);        
     
     wait_fixation        = 0.75;
     rewardConsume_period = 2;
@@ -97,20 +97,33 @@ function BSD_image_flash(debug_on);
   plateau_pix = stimulus_size_deg*va_in_pix;
   edge_pix = edge_rolloff_deg*va_in_pix;
   
-  expt_info.fixation_target_deg = fixation_target_deg;
-  expt_info.stimulus_size_deg = stimulus_size_deg;
-  expt_info.edge_rolloff_deg = edge_rolloff_deg;
+  # expt params
+  expt_info.distance   = distance;
+  expt_info.pix_per_cm = pix_per_cm;
   expt_info.va_in_pix = va_in_pix;
-  expt_info.trackWin_deg = trackWin_deg;  
+  expt_info.Trans_mx_shift = Trans_mx_shift;  
+  expt_info.fill_fixation = 1;
+  expt_info.black_white = 0;
+  
+  expt_info.fixation_target_deg = fixation_target_deg;
+  expt_info.trackWin_deg = trackWin_deg;
+  
+  expt_info.stimulus_size_deg = stimulus_size_deg;
+  expt_info.edge_rolloff_deg = edge_rolloff_deg;  
   expt_info.stimulus_center = stimulus_center;
-  expt_info.waitframes = waitframes;
+  
+  expt_info.image_duration = image_duration;
+  expt_info.blank_duration = blank_duration;  
+  expt_info.waitframes = waitframes;  
   expt_info.wait_fixation = wait_fixation;
-  expt_info.rewardConsume_period = rewardConsume_period;  
-  expt_info.max_trs = max_trs;  
+  expt_info.rewardConsume_period  = rewardConsume_period;  
   expt_info.max_fixation_duration = max_fixation_duration;
   expt_info.min_fixation_duration = min_fixation_duration;
+  
+  expt_info.max_trs = max_trs;  
   expt_info.reward_scaler = reward_scaler;
   expt_info.FR = FR;
+  expt_info.mask_grid = mask_grid;
   
   if mouse_track
     XY = ones(2,1)*nan;

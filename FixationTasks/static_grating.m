@@ -8,7 +8,7 @@ close all;
 PsychDefaultSetup(2);
 
 # use mouse instead of eye tracker
-mouse_track = 1;
+mouse_track = 0;
 
 animal = 'Sansa';
 saveSTR = [animal,'RF-map-trial_records-',date,'.mat'];
@@ -26,6 +26,7 @@ va_in_pix  = va2pix(distance,pix_per_cm);
 if strcmp(animal,'Wolfjaw')
   scaler               = 0.6;
   trackWin_factor      = 2.0;
+  Trans_mx_shift = [0 0];
   wait_fixation        = 0.5;
   rewardConsume_period = 2;
   ms                   = 10;
@@ -47,6 +48,7 @@ elseif strcmp(animal,'Sansa')
   
   scaler               = 0.6;
   trackWin_factor      = 2.0;
+  Trans_mx_shift = [-20 -45];
   wait_fixation        = 0.75;
   rewardConsume_period = 2;
   ms                   = 10;
@@ -96,7 +98,7 @@ if ~mouse_track
   Scale_mx = eye(2);
   Scale_mx(1) = bx(2);
   Scale_mx(4) = by(2);
-  Trans_mx = [bx(1), by(1)]';
+  Trans_mx = [bx(1)+Trans_mx_shift(1), by(1)+Trans_mx_shift(2)]';
 end
 
 

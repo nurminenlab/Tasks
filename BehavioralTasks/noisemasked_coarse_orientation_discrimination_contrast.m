@@ -9,7 +9,7 @@ mouse_track = 0;
 debug_on = 0;
 save_records = 1;
 
-animal = 'Wolfjaw';
+animal = 'Sansa';
 
 records_folder = '/home/vpixx/MonkeyRecords/TrialRecords/';
 saveSTR = [records_folder,animal,'/','noisemasked_coarse_orientation_discrimination-trial_records-',date,'.mat'];
@@ -25,6 +25,39 @@ va_in_pixels = va2pix(distance,pix_per_cm);
 
 if strcmp(animal,'Sansa')
   
+  Trans_mx_shift = [-20 -45]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
+  
+  % task parameters
+  fix_target_deg       = 2;
+  fix_target_pix       = fix_target_deg*va_in_pixels;
+  track_win_deg        = 3;
+  track_win_pix        = track_win_deg*va_in_pixels;
+  d_target_extra       = 1.5;
+  
+  wait_fixation        = 1;
+  rewardConsume_period = 2;
+  max_fixation_time    = 2;
+  min_target_time      = 0.2;  
+  gaze_move_time       = 0.4;
+  response_wait_time   = gaze_move_time;
+  max_trs              = 1000;
+  wrong_target_abort = 1;
+  
+  gridSize = 100;
+  contrasts = [0.01 0.02 0.04 0.08 0.16 0.32];
+  contrasts_idx = [1 1 2 2 3 3 4 4 5 6]; # workaround for weighted randomization of contrast  
+  orientations = [0,90];
+  pix_per_period = 33;
+  plateau_deg = 3;
+  plateau_pix = plateau_deg*va_in_pixels;
+  edge_deg = 0.1;
+  edge_pix = edge_deg*va_in_pixels;  
+  d_target = (plateau_deg + edge_deg + d_target_extra)*va_in_pixels;
+  reward_scaler = 0.5;
+  animal_code = 'MM001';  
+  
+elseif strcmp(animal,'Wolfjaw')
+  
   Trans_mx_shift = [0 -30]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
   
   % task parameters
@@ -38,40 +71,7 @@ if strcmp(animal,'Sansa')
   rewardConsume_period = 2;
   max_fixation_time    = 2;
   min_target_time      = 0.025;  
-  gaze_move_time       = 15;
-  response_wait_time   = gaze_move_time;
-  max_trs              = 1000;
-  wrong_target_abort = 0;
-  
-  gridSize = 128;
-  contrasts = [0.01 0.02 0.04 0.08 0.16 0.32];
-  contrasts_idx = [1 1 2 2 3 3 4 4 5 6]; # workaround for weighted randomization of contrast
-  orientations = [0,90];
-  pix_per_period = 33;
-  plateau_deg = 3;
-  plateau_pix = plateau_deg*va_in_pixels;
-  edge_deg = 0.1;
-  edge_pix = edge_deg*va_in_pixels;  
-  d_target = (plateau_deg + edge_deg + d_target_extra)*va_in_pixels;
-  reward_scaler = 0.5;
-  animal_code = 'MM001';  
-  
-elseif strcmp(animal,'Wolfjaw')
-  
-  Trans_mx_shift = [0 0]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
-  
-  % task parameters
-  fix_target_deg       = 2;
-  fix_target_pix       = fix_target_deg*va_in_pixels;
-  track_win_deg        = 3;
-  track_win_pix        = track_win_deg*va_in_pixels;
-  d_target_extra       = 1.5;
-  
-  wait_fixation        = 1;
-  rewardConsume_period = 2;
-  max_fixation_time    = 2;
-  min_target_time      = 0.025;  
-  gaze_move_time       = 15;
+  gaze_move_time       = 5;
   response_wait_time   = gaze_move_time;
   max_trs              = 1000;
   wrong_target_abort = 0;
@@ -330,7 +330,7 @@ while is_running
       sca;
       if save_records
         expt_info.trial_records = trial_records;
-        save(saveSTR,'trial_records');
+        save(saveSTR,'expt_info');
       endif      
       break;
     end
@@ -396,7 +396,9 @@ while is_running
     reaction_time = nan;
     trial_error = 'no_fixation';
     on_target_time = nan;
-    
+    selected_pos_X = nan;
+    selected_pos_Y = nan;
+    reaction_time = nan;
   end  %
 
   while on_target;     
@@ -418,9 +420,12 @@ while is_running
     end      
     
     if sqrt((XY(1) - X(pos))^2 + (XY(2) - Y(pos))^2) >= trackWindow      
-      on_target = 0;
-      on_target_time = toc(eyeTrack_clock);
+      on_target = 0;      
       trial_error = 'broke_fixation';
+      on_target_time = toc(eyeTrack_clock);
+      selected_pos_X = nan;
+      selected_pos_Y = nan;
+      reaction_time = nan;
       break;      
     end           
    
@@ -452,7 +457,7 @@ while is_running
       sca;
       if save_records
         expt_info.trial_records = trial_records;
-        save(saveSTR,'trial_records');
+        save(saveSTR,'expt_info');
       endif
       
       break;
@@ -486,6 +491,9 @@ while is_running
     
     if gaze_moved && (toc(gaze_move_clock) > gaze_move_time)
       trial_error = 'no_response';
+      selected_pos_X = nan;
+      selected_pos_Y = nan;
+      reaction_time = nan;
       break;
     end
     
@@ -567,7 +575,10 @@ while is_running
     # max length of trial
     if toc(response_time_clock) > response_wait_time      
       waiting_for_response = 0; 
-      trial_error = 'no_response';     
+      trial_error = 'no_response';
+      selected_pos_X = not_target_pos_X(2);
+      selected_pos_Y = not_target_pos_Y(2);     
+      reaction_time = nan;
       break;
     end 
       
@@ -581,7 +592,7 @@ while is_running
       sca;
       if save_records
         expt_info.trial_records = trial_records;
-        save(saveSTR,'trial_records');
+        save(saveSTR,'expt_info');
       endif      
       break;
     end    
@@ -651,7 +662,7 @@ while is_running
       sca;
       if save_records
         expt_info.trial_records = trial_records;
-        save(saveSTR,'trial_records');
+        save(saveSTR,'expt_info');
       endif      
       break;
     end    
@@ -664,7 +675,7 @@ while is_running
       sca;
       if save_records
         expt_info.trial_records = trial_records;
-        save(saveSTR,'trial_records');
+        save(saveSTR,'expt_info');
       endif      
       break;
   end
@@ -682,10 +693,5 @@ while is_running
   trial_records(tr_ind).selected_pos_X = selected_pos_X;
   trial_records(tr_ind).selected_pos_Y = selected_pos_Y;
   trial_records(tr_ind).contrast = contrast;
-  
-  if tr_ind >= max_trs
-    is_running = 0;
-    sca;
-  end
 
 end

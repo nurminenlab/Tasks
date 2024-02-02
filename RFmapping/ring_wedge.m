@@ -25,7 +25,7 @@ function trial_records = ring_wedge(debug_on)
     view_distance = 47;
     pix_per_cm = 36.2;
     va_in_pix  = va2pix(view_distance,pix_per_cm);
-    Trans_mx_shift = [15 -30]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
+    Trans_mx_shift = [30 -30]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
     
     fixation_target_deg = 1.5;    
     trackWin_deg = 2.5; # diameter
@@ -39,7 +39,7 @@ function trial_records = ring_wedge(debug_on)
     max_trs              = 10000;    
     max_fixation_duration = 10;
     min_fixation_duration = 0.1;
-    reward_scaler = 0.9;
+    reward_scaler = 0.5;
     FR = 120;    
     trackMarkerColor = [255,0,0];
     gaze_position = nan*ones(2,FR*ceil((wait_fixation+max_fixation_duration)));
@@ -122,11 +122,11 @@ function trial_records = ring_wedge(debug_on)
     fillStimulus = [0 0 0 0];
   end
     
-  wedge = randperm(90,90) + 180;
+  wedge = randperm(180,90) + 180;
   wedgeCount = 1;
   ringCount = 1;
   
-  ring = 1:0.5:6;
+  ring = 1:1:16;
   ring = (va_in_pix*ring)/2; # /2 due to downstream    
     
   % Load marmoset face
@@ -281,7 +281,7 @@ function trial_records = ring_wedge(debug_on)
         trRing  = []; 
         if(wedgeCount == 90)
           wedgeCount = 1;
-          wedge = randperm(90, 90) + 180;
+          wedge = randperm(180, 90) + 180;
         else      
           wedgeCount = wedgeCount + 1;
         end
@@ -381,7 +381,7 @@ function trial_records = ring_wedge(debug_on)
       
       if(wedgeCount == 90)
         wedgeCount = 1;
-        wedge = randperm(90, 90) + 180;
+        wedge = randperm(180, 90) + 180;
       else      
         wedgeCount = wedgeCount + 1;
       end
