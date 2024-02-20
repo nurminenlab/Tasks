@@ -1,4 +1,6 @@
 function BSD_image_flash(debug_on);
+
+ 
   % prepare PsychoToolbox
   addpath('/home/vpixx/Tasks/Functions/');
   
@@ -26,7 +28,7 @@ function BSD_image_flash(debug_on);
     distance = 47;
     pix_per_cm = 36.2;
     va_in_pix  = va2pix(distance,pix_per_cm);
-    Trans_mx_shift = [0 -30]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
+  Trans_mx_shift = [0 -45];  # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
     
     fixation_target_deg = 3;      
     trackWin_deg = 3.5;

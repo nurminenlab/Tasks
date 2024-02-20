@@ -5,11 +5,11 @@ sca;
 close all;
 
 # use mouse instead of eye tracker
-mouse_track = 1;
+mouse_track = 0;
 debug_on = 0;
-save_records = 0;
+save_records = 1;
 
-animal = 'Wolfjaw';
+animal = 'Sansa';
 
 records_folder = '/home/vpixx/MonkeyRecords/TrialRecords/';
 saveSTR = [records_folder,animal,'/','noisemasked_coarse_orientation_discrimination-trial_records-',date,'.mat'];
@@ -26,7 +26,7 @@ va_in_pixels = va2pix(distance,pix_per_cm);
 
 if strcmp(animal,'Sansa')
   
-  Trans_mx_shift = [0 -30]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
+  Trans_mx_shift = [45 -55]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
   
   % task parameters
   fix_target_deg       = 2;
@@ -47,9 +47,9 @@ if strcmp(animal,'Sansa')
   gridSize = 128;
   #contrasts = [0.01 0.02 0.04 0.08 0.16 0.32]; # target contrast
   #contrasts_idx = [1 1 2 2 3 3 4 4 5 6]; # workaround for weighted randomization of contrast
-  contrasts = [0.1];
+  contrasts = [0.5];
   contrasts_idx = [1];
-  mask_contrast = 0.68;
+  mask_contrast = 0.05;
   orientations = [0,90];
   pix_per_period = 33;
   plateau_deg = 3;
