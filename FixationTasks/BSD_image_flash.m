@@ -28,10 +28,10 @@ function BSD_image_flash(debug_on);
     distance = 47;
     pix_per_cm = 36.2;
     va_in_pix  = va2pix(distance,pix_per_cm);
-  Trans_mx_shift = [0 -45];  # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
+    Trans_mx_shift = [-15 -45];  # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
     
-    fixation_target_deg = 3;      
-    trackWin_deg = 3.5;
+    fixation_target_deg = 1.7;      
+    trackWin_deg = 2.5;
    
     stimulus_size_deg = [4,16];    
     edge_rolloff_deg  = 0.2;
@@ -51,11 +51,12 @@ function BSD_image_flash(debug_on);
     max_trs              = 10000;    
     max_fixation_duration    = 24;
     min_fixation_duration    = 0.1;
-    reward_scaler = 0.6;
+    reward_scaler = 0.7;
     FR = 120;    
     fix_point_Window_size = 100;
     trackMarkerColor = [255,0,0];
     gaze_position = nan*ones(2,FR*ceil((wait_fixation+max_fixation_duration)));
+    TTLwidth = 0.15;
   
   elseif strcmp(animal,'Sansa')
     
@@ -90,6 +91,7 @@ function BSD_image_flash(debug_on);
     fix_point_Window_size = 100;
     trackMarkerColor = [255,0,0];
     gaze_position = nan*ones(2,FR*ceil((wait_fixation+max_fixation_duration)));
+    TTLwidth = 0.15;
   else
     fprintf('Strange animal \n');
   end   
@@ -254,9 +256,9 @@ function BSD_image_flash(debug_on);
   Screen('Flip', eyeTrack_window);    
   
   counter = randperm(numImage, numImage); 
-  count = 1;
+  count = 0;
   trCount = [];
-  endCounter = 0;
+  
   
   imgScaleOrder = randperm(length(stimulus_size_deg),length(stimulus_size_deg));
   scaleCount = 1;     
@@ -373,7 +375,7 @@ function BSD_image_flash(debug_on);
           sca;
           expt_info.trial_records = trial_records;
           if save_records;
-            save(saveSTR,'expt_info'); 
+            save('-mat7-binary',saveSTR,'expt_info'); 
           endif
           
           break;
@@ -389,7 +391,7 @@ function BSD_image_flash(debug_on);
       Screen('FrameOval',eyeTrack_window, [0 0 255], trackWindow_rect(:,:,pos), 3,3);
       Datapixx('SetDoutValues', 4);
       stimulusScreen_stimulus_vbl = Screen('Flip', stimulus_window, greyScreen_stimulus_vbl + rewardConsume_period);
-      stimulusScreen_eyeTrack_vbl = Screen('Flip', eyeTrack_window, greyScreen_eyeTrack_vbl + rewardConsume_period,1);       
+      stimulusScreen_eyeTrack_vbl = Screen('Flip', eyeTrack_window, greyScreen_eyeTrack_vbl + rewardConsume_period,1);
       Datapixx('RegWrRd');
     
       wait_fixation_clock = tic();
@@ -424,7 +426,12 @@ function BSD_image_flash(debug_on);
           tic();
           reaction_time = toc(wait_fixation_clock);
           eyeTrack_clock = tic();      
-               
+          
+          trImage = [];
+          trImage_idx = 1;
+          trScale = [];
+          trScale_idx = 1;
+          
           if(count == numImage)
             count = 1;
             counter = randperm(numImage, numImage);
@@ -438,26 +445,22 @@ function BSD_image_flash(debug_on);
           # first stimulus after the monkey acquired fixation
           Screen('DrawTexture', eyeTrack_window, imageTextures_eyeTrack{counter(count)}, [], stimulus_rect, 0);
           Screen('FillOval', eyeTrack_window, [128 128 128], fillStimulus);
-          Screen('DrawTexture', eyeTrack_window, mask_text_eyeTrack(scaleCount), [], mask_rect, 0);
+          Screen('DrawTexture', eyeTrack_window, mask_text_eyeTrack(imgScaleOrder(scaleCount)), [], mask_rect, 0);
           Screen('DrawTexture', eyeTrack_window, eyeTrack_imageTexture, [], rects(:,:,pos));
           Screen('FrameOval',eyeTrack_window,[0 0 255],fix_point_Windowrect,3,3); # to mark fixation window
        
           Screen('DrawTexture', stimulus_window, imageTextures_stimulus{counter(count)}, [], stimulus_rect, 0);
           Screen('FillOval', stimulus_window, [128 128 128], fillStimulus);
-          Screen('DrawTexture', stimulus_window, mask_text_stimulus(scaleCount), [], mask_rect, 0);
+          Screen('DrawTexture', stimulus_window, mask_text_stimulus(imgScaleOrder(scaleCount)), [], mask_rect, 0);
           Screen('DrawTexture', stimulus_window, stimulus_imageTexture, [], rects(:,:,pos)); 
         
           vbl1 = Screen('Flip', stimulus_window, greyScreen_stimulus_vbl + rewardConsume_period,1);     
           vbl2 = Screen('Flip', eyeTrack_window, greyScreen_stimulus_vbl + rewardConsume_period,1);
+          
           # send TTL
-          now = tic();
-          Datapixx('SetDoutValues', 84);
-          Datapixx('RegWrRd');
-          while toc(now) < 0.02
-            # do nothing
-          end
-          Datapixx('SetDoutValues', 20);          
-          Datapixx('RegWrRd');
+          sendTTL(84,20,TTLwidth);
+          trImage(trImage_idx) = counter(count);
+          trScale(trScale_idx) = imgScaleOrder(scaleCount);
           break;
         end
       
@@ -468,6 +471,8 @@ function BSD_image_flash(debug_on);
         reaction_time = nan;
         trial_error = 'no_fixation';
         on_target_time = nan;
+        trImage = nan;
+        trScale = nan;
       
       end   
       
@@ -503,11 +508,9 @@ function BSD_image_flash(debug_on);
         even = even + 1;
         if (blank == 1) && (mod(even, 2) == 1)
           stimulus_rect = [0 0 0 0];
-          display(even)
+          #display(even)
           Screen('FillRect', stimulus_window, grey);    
-          Screen('FillRect', eyeTrack_window, grey);         
-      
-          endCounter = count;
+          Screen('FillRect', eyeTrack_window, grey);                        
       
           vbl1 = Screen('Flip', eyeTrack_window, vbl1 + (waitframes - 0.5) * ifi1);
           vbl2 = Screen('Flip', stimulus_window, vbl2 + (waitframes - 0.5) * ifi2);
@@ -516,31 +519,29 @@ function BSD_image_flash(debug_on);
       
           Screen('DrawTexture', eyeTrack_window, imageTextures_eyeTrack{counter(count)}, [], stimulus_rect, 0);
           Screen('FillOval', eyeTrack_window, [128 128 128], fillStimulus);
-          Screen('DrawTexture', eyeTrack_window, mask_text_eyeTrack(scaleCount), [], mask_rect, 0);
+          Screen('DrawTexture', eyeTrack_window, mask_text_eyeTrack(imgScaleOrder(scaleCount)), [], mask_rect, 0);
           Screen('DrawTexture', eyeTrack_window, eyeTrack_imageTexture, [], rects(:,:,pos));      
           Screen('FrameOval',eyeTrack_window,[0 0 255],fix_point_Windowrect,3,3); # to mark fixation window
       
           Screen('DrawTexture', stimulus_window, imageTextures_stimulus{counter(count)}, [], stimulus_rect, 0);
           Screen('FillOval', stimulus_window, [128 128 128], fillStimulus);
-          Screen('DrawTexture', stimulus_window, mask_text_stimulus(scaleCount), [], mask_rect, 0);
+          Screen('DrawTexture', stimulus_window, mask_text_stimulus(imgScaleOrder(scaleCount)), [], mask_rect, 0);
           Screen('DrawTexture', stimulus_window, stimulus_imageTexture, [], rects(:,:,pos));
-      
-          endCounter = count;
+                
           
           vbl1 = Screen('Flip', eyeTrack_window, vbl1 + (waitframes - 0.5) * ifi1);
           vbl2 = Screen('Flip', stimulus_window, vbl2 + (waitframes - 0.5) * ifi2);
+          
           # send TTL
-          now = tic();
-          Datapixx('SetDoutValues', 84);
-          Datapixx('RegWrRd');
-          while toc(now) < 0.02
-            # do nothing
-          end
-          Datapixx('SetDoutValues', 20);
-          Datapixx('RegWrRd');
+          sendTTL(84,20,TTLwidth);
+          trImage_idx = trImage_idx + 1;
+          trScale_idx = trScale_idx + 1;
+          trImage(trImage_idx) = counter(count);
+          trScale(trScale_idx) = imgScaleOrder(scaleCount);
+          
         endif    
         
-        if sqrt((XY(1) - X(pos))^2 + (XY(2) - Y(pos))^2) >= trackWindow      
+        if sqrt((XY(1) - X(pos))^2 + (XY(2) - Y(pos))^2) >= trackWindow
           # set digital out to 0 for channel XYZ
           Datapixx('SetDoutValues', 0);
           Datapixx('RegWrRd');
@@ -612,22 +613,17 @@ function BSD_image_flash(debug_on);
           sca;
           expt_info.trial_records = trial_records;
           if save_records
-            save(saveSTR,'expt_info');
+            save('-mat7-binary',saveSTR,'expt_info');
           end
           
           break;
         end    
-      end     
-   
-      if endCounter != 0  
-        for i = 1 : (endCounter - startCounter + 1)
-          trCount(i) = counter(startCounter + i - 1);
-        end
       end
    
       % record trial data
       trial_records(tr_ind).stimulus = stimulus_image;
-      trial_records(tr_ind).trCount = trCount;
+      trial_records(tr_ind).trImage = trImage;
+      trial_records(tr_ind).trScale = trScale;
       trial_records(tr_ind).positionX = X(pos);
       trial_records(tr_ind).positionY = Y(pos);
       trial_records(tr_ind).reaction_time  = reaction_time;
@@ -642,7 +638,7 @@ function BSD_image_flash(debug_on);
         sca;
         expt_info.trial_records = trial_records;
         if save_records
-          save(saveSTR,'expt_info');
+          save('-mat7-binary',saveSTR,'expt_info');
         end        
         break;
       end  

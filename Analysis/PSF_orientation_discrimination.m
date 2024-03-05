@@ -1,5 +1,4 @@
 # psf orientataion discrimination
-
 # load data 
 contrast = ones(1,length(trial_records))*nan;
 for i = 1:length(trial_records)

@@ -9,7 +9,7 @@ mouse_track = 0;
 debug_on = 0;
 save_records = 1;
 
-animal = 'Wolfjaw';
+animal = 'Sansa';
 
 records_folder = '/home/vpixx/MonkeyRecords/TrialRecords/';
 saveSTR = [records_folder,animal,'/','noisemasked_coarse_orientation_discrimination-trial_records-',date,'.mat'];
@@ -25,10 +25,10 @@ va_in_pixels = va2pix(distance,pix_per_cm);
 
 if strcmp(animal,'Sansa')
   
- Trans_mx_shift = [45 -45]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
+  Trans_mx_shift = [20 -55]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
   
   % task parameters
-  fix_target_deg       = 2;
+  fix_target_deg       = 1.8;
   fix_target_pix       = fix_target_deg*va_in_pixels;
   track_win_deg        = 3;
   track_win_pix        = track_win_deg*va_in_pixels;
@@ -58,26 +58,26 @@ if strcmp(animal,'Sansa')
   
 elseif strcmp(animal,'Wolfjaw')
   
-  Trans_mx_shift = [0 -45]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
+  Trans_mx_shift = [-15 -45];# a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
   
   % task parameters
   fix_target_deg       = 2;
   fix_target_pix       = fix_target_deg*va_in_pixels;
-  track_win_deg        = 3;
+  track_win_deg        = 3.5;
   track_win_pix        = track_win_deg*va_in_pixels;
   d_target_extra       = 1.5;
   
   wait_fixation        = 1;
   rewardConsume_period = 1;
   max_fixation_time    = 2;
-  min_target_time      = 0.025;  
-  gaze_move_time       = 0.8;
+  min_target_time      = 0.05;  
+  gaze_move_time       = 0.4;
   response_wait_time   = gaze_move_time;
   max_trs              = 1000;
   wrong_target_abort = 0;
   
   gridSize = 128;
-  contrasts = [1];
+  contrasts = [0.5];
   contrasts_idx = [1]; # workaround for weighted randomization of contrast
   orientations = [0,90];
   pix_per_period = 33;
@@ -86,7 +86,7 @@ elseif strcmp(animal,'Wolfjaw')
   edge_deg = 0.1;
   edge_pix = edge_deg*va_in_pixels;  
   d_target = (plateau_deg + edge_deg + d_target_extra)*va_in_pixels;
-  reward_scaler = 0.5;
+  reward_scaler = 0.6;
   animal_code = 'MM004';
   
 else

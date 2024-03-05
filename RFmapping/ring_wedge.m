@@ -25,24 +25,29 @@ function trial_records = ring_wedge(debug_on)
     view_distance = 47;
     pix_per_cm = 36.2;
     va_in_pix  = va2pix(view_distance,pix_per_cm);
-    Trans_mx_shift = [30 -30]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
+    Trans_mx_shift = [15 -55];# a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels.
     
-    fixation_target_deg = 1.5;    
-    trackWin_deg = 2.5; # diameter
-    ring_width_deg = 1;    
+    fixation_target_deg = 1.5;
+    trackWin_deg = 2; # diameter
+    ring_width_deg = 2;
+    ring_start_deg = 2;
+    ring_stop_deg  = 16;
+    wedge_angle = 20;
     
-    waitframes = 7;    
+    waitframes = 30;
     fill_fixation = 1;
+    TTLwidth = 0.015;
     wait_fixation        = 0.75;
     rewardConsume_period = 2;
     ms                   = 10;    
     max_trs              = 10000;    
-    max_fixation_duration = 10;
+    max_fixation_duration = 120;
     min_fixation_duration = 0.1;
     reward_scaler = 0.5;
     FR = 120;    
     trackMarkerColor = [255,0,0];
     gaze_position = nan*ones(2,FR*ceil((wait_fixation+max_fixation_duration)));
+  
   else
     fprintf('Strange animal \n');
   end  
@@ -52,6 +57,8 @@ function trial_records = ring_wedge(debug_on)
   expt_info.va_in_pix = va_in_pix;
   expt_info.fixation_target_deg = fixation_target_deg;
   expt_info.ring_width_deg = ring_width_deg;
+  expt_info.ring_start_deg = ring_start_deg;
+  expt_info.ring_stop_deg  = ring_stop_deg;
   expt_info.trackWin_deg = trackWin_deg;
   expt_info.waitframes = waitframes;
   expt_info.fill_fixation = fill_fixation;
@@ -61,7 +68,7 @@ function trial_records = ring_wedge(debug_on)
   expt_info.max_fixation_duration = max_fixation_duration;  
   expt_info.min_fixation_duration = min_fixation_duration;
   expt_info.reward_scaler = reward_scaler;
-  
+  expt_info.TTLwidth = TTLwidth;
   if mouse_track
     XY = ones(2,1)*nan;
   end
@@ -122,11 +129,15 @@ function trial_records = ring_wedge(debug_on)
     fillStimulus = [0 0 0 0];
   end
     
-  wedge = randperm(180,90) + 180;
+  
+  wedge = 0:wedge_angle:180;
+  wedge = 180 + wedge;
+  wedge = wedge(randperm(length(wedge)));
+  
   wedgeCount = 1;
   ringCount = 1;
   
-  ring = 1:1:16;
+  ring = ring_start_deg:ring_width_deg:ring_stop_deg;
   ring = (va_in_pix*ring)/2; # /2 due to downstream    
     
   % Load marmoset face
@@ -158,7 +169,7 @@ function trial_records = ring_wedge(debug_on)
   windowPointer = stimulus_window;  
   
   tr_ind = 0;
-  tr = struct();
+  trial_records = struct();
   is_running = 1;
   conditions = ['5'];
   pos = 5;
@@ -183,8 +194,7 @@ function trial_records = ring_wedge(debug_on)
     
     waiting_for_response = 0;
     tracking_reward = 0;
-    on_target = 0;    
-    
+    on_target = 0;        
     
     if tr_ind > 1
       Screen('Flip', eyeTrack_window,0);
@@ -227,8 +237,8 @@ function trial_records = ring_wedge(debug_on)
         Datapixx('Close');      
         close all;
         sca;
-        expt_info.trial_records = trial_records;        
-        save(saveSTR,'expt_info');        
+        expt_info.trial_records = trial_records;
+        save('-mat7-binary',saveSTR,'expt_info');        
         break;
       end
       
@@ -278,37 +288,29 @@ function trial_records = ring_wedge(debug_on)
         eyeTrack_clock = tic();      
                
         trWedge = [];
-        trRing  = []; 
-        if(wedgeCount == 90)
-          wedgeCount = 1;
-          wedge = randperm(180, 90) + 180;
-        else      
-          wedgeCount = wedgeCount + 1;
-        end
-        
-        inRing = [track_centerX - ring(ringCount), track_centerY - ring(ringCount), track_centerX + ring(ringCount), track_centerY + ring(ringCount)]; 
-        outRing = [track_centerX - (ring(ringCount)+ring_width_deg*va_in_pix), ...
-                    track_centerY - (ring(ringCount)+ring_width_deg*va_in_pix), ...
-                    track_centerX + (ring(ringCount)+ring_width_deg*va_in_pix), ...
-                    track_centerY + (ring(ringCount)+ring_width_deg*va_in_pix)];
-        ringCount = ringCount + 1;
-        
-        if ringCount > length(ring)
-          ringCount = 1;
-          ring_ind = randperm(length(ring), length(ring));
-          ring = ring(ring_ind);
-        end
-    
+        trRing  = [];     
         turn = 0;
+        wedge_turn = 0;
+        ring_turn  = 0;
         
-        if(mod(turn, 2) == 0)
-          Screen('FillArc', eyeTrack_window, [0 0 0], fillStimulus, wedge(wedgeCount), 9);
-          Screen('FillArc', stimulus_window, [0 0 0], fillStimulus, wedge(wedgeCount), 9);
-        else
+        if(mod(turn, 2) == 0) # every second stimulus is a wedge
+        
+          Screen('FillArc', eyeTrack_window, [0 0 0], fillStimulus, wedge(wedgeCount), wedge_angle);
+          Screen('FillArc', stimulus_window, [0 0 0], fillStimulus, wedge(wedgeCount), wedge_angle);          
+        
+        else # every second stimulus is a ring
+          
+          inRing = [track_centerX - ring(ringCount), track_centerY - ring(ringCount), track_centerX + ring(ringCount), track_centerY + ring(ringCount)];
+          outRing = [track_centerX - (ring(ringCount) + ring_width_deg*va_in_pix), ...
+                    track_centerY - (ring(ringCount) + ring_width_deg*va_in_pix), ...
+                    track_centerX + (ring(ringCount) + ring_width_deg*va_in_pix), ...
+                    track_centerY + (ring(ringCount) + ring_width_deg*va_in_pix)];                          
+          
           Screen('FillOval', eyeTrack_window, [0 0 0], outRing);
           Screen('FillOval', eyeTrack_window, [128 128 128], inRing);
           Screen('FillOval', stimulus_window, [0 0 0], outRing);
           Screen('FillOval', stimulus_window, [128 128 128], inRing);
+          
         end
         
         Screen('DrawTexture', eyeTrack_window, eyeTrack_imageTexture, [], rects(:,:,pos));
@@ -317,20 +319,33 @@ function trial_records = ring_wedge(debug_on)
         Screen('DrawTexture', stimulus_window, stimulus_imageTexture, [], rects(:,:,pos)); 
         Screen('FillOval', stimulus_window, [128 128 128], [0 0 0 0]);
         
-        turn = turn + 1;
-        trWedge(turn) = wedge(wedgeCount);
-        trRing(turn) = ring(ringCount);
-        vbl1 = Screen('Flip', stimulus_window, greyScreen_stimulus_vbl + rewardConsume_period,1);
-        vbl2 = Screen('Flip', eyeTrack_window, greyScreen_stimulus_vbl + rewardConsume_period,1);
-        # send TTL
-        now = tic();
-        Datapixx('SetDoutValues', 84);
-        Datapixx('RegWrRd');
-        while toc(now) < 0.02
-          # do nothing
+        turn = turn + 1;        
+        
+        vbl1 = Screen('Flip', stimulus_window);
+        vbl2 = Screen('Flip', eyeTrack_window);
+        
+        sendTTL(84,20,TTLwidth);        
+        
+        if(mod(turn, 2) == 0) # update records if wedge               
+          wedge_turn = wedge_turn + 1;
+          trWedge(wedge_turn) = wedge(wedgeCount);          
+          if(wedgeCount == length(wedge))
+            wedgeCount = 1;
+            #wedge = wedge(randperm(length(wedge)));
+          else      
+            wedgeCount = wedgeCount + 1;
+          end                          
+        else # update records if ring          
+          ring_turn = ring_turn + 1;
+          trRing(ring_turn) = ring(ringCount);         
+          if ringCount == length(ring)
+            ringCount = 1;
+            #ring_ind = randperm(length(ring), length(ring));
+            #ring = ring(ring_ind);
+          else
+            ringCount = ringCount + 1;
+          end          
         end
-        Datapixx('SetDoutValues', 20);          
-        Datapixx('RegWrRd');
         
         break;
       end
@@ -352,7 +367,7 @@ function trial_records = ring_wedge(debug_on)
         close all;
         sca;
         expt_info.trial_records = trial_records;        
-        save(saveSTR,'expt_info');        
+        save('-mat7-binary',saveSTR,'expt_info');
         break;
       end      
     end  
@@ -379,35 +394,28 @@ function trial_records = ring_wedge(debug_on)
       g = g +1;
       gaze_position(:,g) = XY;
       
-      if(wedgeCount == 90)
-        wedgeCount = 1;
-        wedge = randperm(180, 90) + 180;
-      else      
-        wedgeCount = wedgeCount + 1;
-      end
-      
-      inRing = [track_centerX - ring(ringCount), track_centerY - ring(ringCount), track_centerX + ring(ringCount), track_centerY + ring(ringCount)]; 
-      outRing = [track_centerX - (ring(ringCount)+ring_width_deg*va_in_pix), ...
-                  track_centerY - (ring(ringCount)+ring_width_deg*va_in_pix), ...
-                  track_centerX + (ring(ringCount)+ring_width_deg*va_in_pix), ...
-                  track_centerY + (ring(ringCount)+ring_width_deg*va_in_pix)];
-      ringCount = ringCount + 1;
+      ############## start copy-paste
+      if(mod(turn, 2) == 0) # every second stimulus is a wedge
         
-      if ringCount > length(ring)
-        ringCount = 1;
-        ring_ind = randperm(length(ring), length(ring));
-        ring = ring(ring_ind);
-      end              
-      
-      
-      if(mod(turn, 2) == 0)
-        Screen('FillArc', eyeTrack_window, [0 0 0], fillStimulus, wedge(wedgeCount), 9);
-        Screen('FillArc', stimulus_window, [0 0 0], fillStimulus, wedge(wedgeCount), 9);
-      else
-        Screen('FillOval', eyeTrack_window, [0 0 0], outRing);
-        Screen('FillOval', eyeTrack_window, [128 128 128], inRing);
-        Screen('FillOval', stimulus_window, [0 0 0], outRing);
-        Screen('FillOval', stimulus_window, [128 128 128], inRing);
+          Screen('FillArc', eyeTrack_window, [0 0 0], fillStimulus, wedge(wedgeCount), wedge_angle);
+          Screen('FillArc', stimulus_window, [0 0 0], fillStimulus, wedge(wedgeCount), wedge_angle);
+          
+          
+        
+      else # every second stimulus is a ring
+          
+          inRing = [track_centerX - ring(ringCount), track_centerY - ring(ringCount), track_centerX + ring(ringCount), track_centerY + ring(ringCount)]; 
+          outRing = [track_centerX - (ring(ringCount) + ring_width_deg*va_in_pix), ...
+                    track_centerY - (ring(ringCount) + ring_width_deg*va_in_pix), ...
+                    track_centerX + (ring(ringCount) + ring_width_deg*va_in_pix), ...
+                    track_centerY + (ring(ringCount) + ring_width_deg*va_in_pix)];                          
+          
+          Screen('FillOval', eyeTrack_window, [0 0 0], outRing);
+          Screen('FillOval', eyeTrack_window, [128 128 128], inRing);
+          Screen('FillOval', stimulus_window, [0 0 0], outRing);
+          Screen('FillOval', stimulus_window, [128 128 128], inRing);
+          
+          
       end
       
       Screen('DrawTexture', eyeTrack_window, eyeTrack_imageTexture, [], rects(:,:,pos));      
@@ -415,21 +423,34 @@ function trial_records = ring_wedge(debug_on)
       
       Screen('DrawTexture', stimulus_window, stimulus_imageTexture, [], rects(:,:,pos));
       
-      turn = turn + 1;
-      trWedge(turn) = wedge(wedgeCount);
-      trRing(turn)  = ring(ringCount);
+      turn = turn + 1;      
       
       vbl1 = Screen('Flip', eyeTrack_window, vbl1 + (waitframes - 0.5) * ifi1);
       vbl2 = Screen('Flip', stimulus_window, vbl2 + (waitframes - 0.5) * ifi2);
-      # send TTL
-      now = tic();
-      Datapixx('SetDoutValues', 84);
-      Datapixx('RegWrRd');
-      while toc(now) < 0.02
-        # do nothing
+      
+      sendTTL(84,20,TTLwidth);
+      
+      if(mod(turn, 2) == 0) # every second stimulus is a wedge
+          wedge_turn = wedge_turn + 1;
+          trWedge(wedge_turn) = wedge(wedgeCount);         
+          if(wedgeCount == length(wedge))
+            wedgeCount = 1;
+            #wedge = wedge(randperm(length(wedge)));
+          else      
+            wedgeCount = wedgeCount + 1;
+          end
+      else # every second stimulus is a ring
+          ring_turn = ring_turn + 1;
+          trRing(ring_turn) = ring(ringCount);          
+          if ringCount == length(ring)
+            ringCount = 1;
+            #ring_ind = randperm(length(ring), length(ring));
+            #ring = ring(ring_ind);
+          else
+            ringCount = ringCount + 1;
+          end          
       end
-      Datapixx('SetDoutValues', 20);          
-      Datapixx('RegWrRd');
+      
       
       if sqrt((XY(1) - X(pos))^2 + (XY(2) - Y(pos))^2) >= trackWindow      
         # set digital out to 0 for channel XYZ
@@ -502,7 +523,7 @@ function trial_records = ring_wedge(debug_on)
         close all;
         sca;
         expt_info.trial_records = trial_records;        
-        save(saveSTR,'expt_info');        
+        save('-mat7-binary',saveSTR,'expt_info');
         break;
       end    
     end  %   
@@ -513,7 +534,7 @@ function trial_records = ring_wedge(debug_on)
       close all;
       sca; 
       expt_info.trial_records = trial_records;
-      save(saveSTR,'expt_info');     
+      save('-mat7-binary',saveSTR,'expt_info');
       break;
     end
     
