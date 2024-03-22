@@ -25,7 +25,7 @@ function trial_records = ring_wedge(debug_on)
     view_distance = 47;
     pix_per_cm = 36.2;
     va_in_pix  = va2pix(view_distance,pix_per_cm);
-    Trans_mx_shift = [15 -55];# a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels.
+    Trans_mx_shift = [0 -45];# a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels.
     
     fixation_target_deg = 1.5;
     trackWin_deg = 2; # diameter
@@ -331,7 +331,7 @@ function trial_records = ring_wedge(debug_on)
           trWedge(wedge_turn) = wedge(wedgeCount);          
           if(wedgeCount == length(wedge))
             wedgeCount = 1;
-            #wedge = wedge(randperm(length(wedge)));
+            wedge = wedge(randperm(length(wedge)));
           else      
             wedgeCount = wedgeCount + 1;
           end                          
@@ -340,8 +340,8 @@ function trial_records = ring_wedge(debug_on)
           trRing(ring_turn) = ring(ringCount);         
           if ringCount == length(ring)
             ringCount = 1;
-            #ring_ind = randperm(length(ring), length(ring));
-            #ring = ring(ring_ind);
+            ring_ind = randperm(length(ring), length(ring));
+            ring = ring(ring_ind);
           else
             ringCount = ringCount + 1;
           end          
@@ -435,7 +435,7 @@ function trial_records = ring_wedge(debug_on)
           trWedge(wedge_turn) = wedge(wedgeCount);         
           if(wedgeCount == length(wedge))
             wedgeCount = 1;
-            #wedge = wedge(randperm(length(wedge)));
+            wedge = wedge(randperm(length(wedge)));
           else      
             wedgeCount = wedgeCount + 1;
           end
@@ -444,8 +444,8 @@ function trial_records = ring_wedge(debug_on)
           trRing(ring_turn) = ring(ringCount);          
           if ringCount == length(ring)
             ringCount = 1;
-            #ring_ind = randperm(length(ring), length(ring));
-            #ring = ring(ring_ind);
+            ring_ind = randperm(length(ring), length(ring));
+            ring = ring(ring_ind);
           else
             ringCount = ringCount + 1;
           end          

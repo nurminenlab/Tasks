@@ -9,7 +9,7 @@ mouse_track = 0;
 debug_on = 0;
 save_records = 1;
 
-animal = 'Sansa';
+animal = 'Wolfjaw';
 
 records_folder = '/home/vpixx/MonkeyRecords/TrialRecords/';
 saveSTR = [records_folder,animal,'/','noisemasked_coarse_orientation_discrimination-trial_records-',date,'.mat'];
@@ -25,7 +25,7 @@ va_in_pixels = va2pix(distance,pix_per_cm);
 
 if strcmp(animal,'Sansa')
   
-  Trans_mx_shift = [20 -55]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
+  Trans_mx_shift = [30 -45]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
   
   % task parameters
   fix_target_deg       = 1.8;
@@ -58,26 +58,26 @@ if strcmp(animal,'Sansa')
   
 elseif strcmp(animal,'Wolfjaw')
   
-  Trans_mx_shift = [-15 -45];# a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
+  Trans_mx_shift = [15 0];# a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
   
   % task parameters
-  fix_target_deg       = 2;
+  fix_target_deg       = 1.5; #fixation target size in degrees
   fix_target_pix       = fix_target_deg*va_in_pixels;
-  track_win_deg        = 3.5;
+  track_win_deg        = 3.0; #blue ring around central fixation target
   track_win_pix        = track_win_deg*va_in_pixels;
-  d_target_extra       = 1.5;
+  d_target_extra       = 1.75; #acceptance window for other targets
   
-  wait_fixation        = 1;
-  rewardConsume_period = 1;
-  max_fixation_time    = 2;
-  min_target_time      = 0.05;  
-  gaze_move_time       = 0.4;
+  wait_fixation        = 1; #wait fixation time until next trial offered
+  rewardConsume_period = 1; #time between trials
+  max_fixation_time    = 2; #length of time that the monkey can look at the larger target
+  min_target_time      = 0.07; #min fixation time to central target before giving answer; increase to 0.2 gradually
+  gaze_move_time       = 0.4; 
   response_wait_time   = gaze_move_time;
   max_trs              = 1000;
-  wrong_target_abort = 0;
+  wrong_target_abort = 1;
   
   gridSize = 128;
-  contrasts = [0.5];
+  contrasts = [0.08]; #can go lower
   contrasts_idx = [1]; # workaround for weighted randomization of contrast
   orientations = [0,90];
   pix_per_period = 33;

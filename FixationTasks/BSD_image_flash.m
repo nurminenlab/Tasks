@@ -28,9 +28,9 @@ function BSD_image_flash(debug_on);
     distance = 47;
     pix_per_cm = 36.2;
     va_in_pix  = va2pix(distance,pix_per_cm);
-    Trans_mx_shift = [-15 -45];  # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
+   Trans_mx_shift = [0 -30];  # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
     
-    fixation_target_deg = 1.7;      
+    fixation_target_deg = 1.1;      
     trackWin_deg = 2.5;
    
     stimulus_size_deg = [4,16];    
@@ -38,7 +38,7 @@ function BSD_image_flash(debug_on);
     stimulus_center = [825 675]; # change this so as to be defined in polar coordinates MAYBE LATER
     
     image_duration = 0.3;
-    blank_duration = 1;
+    blank_duration = 0.75;
     blank = 0;    
     waitframes = ceil(image_duration*120);    
     waitframes2 = ceil(blank_duration*120);    
@@ -63,14 +63,14 @@ function BSD_image_flash(debug_on);
     distance = 47;
     pix_per_cm = 36.2;
     va_in_pix  = va2pix(distance,pix_per_cm);
-    Trans_mx_shift = [30 -30]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
+    Trans_mx_shift = [30 -45]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
     fill_fixation = 1;    
     black_white = 0;
     
-    fixation_target_deg = 1.5;      
+    fixation_target_deg = 1.1;      
     trackWin_deg = 2.5;
    
-    stimulus_size_deg = [4,16];    
+    stimulus_size_deg = [16];    
     edge_rolloff_deg  = 0.2;
     stimulus_center = [825 675]; # change this so as to be defined in polar coordinates MAYBE LATER
     
@@ -205,7 +205,8 @@ function BSD_image_flash(debug_on);
   mask_rect = [0 0 mask_grid mask_grid];
   mask_rect = CenterRectOnPoint(mask_rect, stimulus_center(1), stimulus_center(2));
   
-  specificImage = [1 3 5 9 11 13];
+  specificImage = 1:100;
+  #specificImage = [1 3 5 9 11 13];
   numImage = length(specificImage);  
   fls = dir(image_dir);
   

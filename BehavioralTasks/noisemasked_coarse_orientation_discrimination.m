@@ -26,7 +26,7 @@ va_in_pixels = va2pix(distance,pix_per_cm);
 
 if strcmp(animal,'Sansa')
   
-  Trans_mx_shift = [45 -55]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
+  Trans_mx_shift = [45 -75]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
   
   % task parameters
   fix_target_deg       = 2;
@@ -39,17 +39,16 @@ if strcmp(animal,'Sansa')
   rewardConsume_period = 2;
   max_fixation_time    = 2;
   min_target_time      = 0.2;  
-  gaze_move_time       = 0.45;
+  gaze_move_time       = 0.4;
   response_wait_time   = gaze_move_time;
   max_trs              = 1000;
   wrong_target_abort = 1;
   
   gridSize = 128;
-  #contrasts = [0.01 0.02 0.04 0.08 0.16 0.32]; # target contrast
-  #contrasts_idx = [1 1 2 2 3 3 4 4 5 6]; # workaround for weighted randomization of contrast
-  contrasts = [0.5];
-  contrasts_idx = [1];
-  mask_contrast = 0.05;
+  %contrasts = [0.02 0.04 0.08 0.16 0.32]; # target contrast
+  contrasts = [0.04 0.08 0.16 0.32 0.64];  
+  contrasts_idx = [1 1 2 2 3 3 4 5]; # workaround for weighted randomization of contrast
+  mask_contrast = 0.1;
   orientations = [0,90];
   pix_per_period = 33;
   plateau_deg = 3;
@@ -135,7 +134,6 @@ expt_info.pix_per_period       = pix_per_period
 expt_info.plateau_deg          = plateau_deg;
 expt_info.edge_deg             = edge_deg;
 expt_info.reward_scaler        = reward_scaler;
-
 fix_point_Window_size = track_win_pix;
 trackMarkerColor = [255,0,0];
 
