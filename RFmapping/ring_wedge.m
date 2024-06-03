@@ -25,10 +25,10 @@ function trial_records = ring_wedge(debug_on)
     view_distance = 47;
     pix_per_cm = 36.2;
     va_in_pix  = va2pix(view_distance,pix_per_cm);
-    Trans_mx_shift = [0 -45];# a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels.
+    Trans_mx_shift = [30 -15];# a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels.
     
-    fixation_target_deg = 1.5;
-    trackWin_deg = 2; # diameter
+    fixation_target_deg = 0.8;
+    trackWin_deg = 1.3; # diameter
     ring_width_deg = 2;
     ring_start_deg = 2;
     ring_stop_deg  = 16;

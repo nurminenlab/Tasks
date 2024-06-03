@@ -1,18 +1,18 @@
-% prepare PsychoToolbox
+  % prepare PsychoToolbox
 AssertOpenGL;
 sca;
 close all;
 clear;
 
 % user defined parameters
-scaler = 0.4;
-#scaler = 0.45;
+scaler = 0.35;
+%scaler = 0.5;
 stimulus_duration = 1;
 reward_size_time = 0.4;
 
 % set-up Datapixx
 Datapixx('Open');
-Datapixx('StopAllSchedules');
+Datapixx('StopAllSchedules'); 
 
 
 % allocate space for acquiring eye-tracker voltages

@@ -10,7 +10,7 @@ PsychDefaultSetup(2);
 # use mouse instead of eye tracker
 mouse_track = 0;
 
-animal = 'Wolfjaw';
+animal = 'Sansa';
 saveSTR = [animal,'RF-map-trial_records-',date,'.mat'];
 save_append = 0;
 while exist(saveSTR,'file') == 2
@@ -24,9 +24,9 @@ pix_per_cm = 36.2;
 va_in_pix  = va2pix(distance,pix_per_cm);
 
 if strcmp(animal,'Wolfjaw')
-  scaler               = 0.4;
+  scaler               = 0.35;
   trackWin_factor      = 2.0;
-  Trans_mx_shift = [15 0];
+  Trans_mx_shift = [-15 -30];
   wait_fixation        = 0.5;
   rewardConsume_period = 2;
   ms                   = 10;
@@ -45,10 +45,9 @@ if strcmp(animal,'Wolfjaw')
   gaze_position = nan*ones(2,FR*ceil((wait_fixation+max_fixation_time)));
   
 elseif strcmp(animal,'Sansa')
-  
-  scaler               = 0.4;
+  scaler               = 0.25;
   trackWin_factor      = 2.0;
-  Trans_mx_shift = [45 -75];
+  Trans_mx_shift = [50 -50];
   wait_fixation        = 0.75;
   rewardConsume_period = 2;
   ms                   = 10;
@@ -135,6 +134,7 @@ theImage = imread(stimulus_image);
 
 % scale image rectangle
 rect = [0 0 s1*scaler s2*scaler];
+
 #small_rect = [0 0 s1*small_scaler s2*small_scaler];
 
 eyePos_rect = [0 0 5 5];

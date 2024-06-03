@@ -14,7 +14,7 @@ function BSD_image_flash(debug_on);
   mouse_track = 0;
   save_records = 1;
   
-  animal = 'Wolfjaw';
+  animal = 'Sansa';
   saveSTR = ['/home/vpixx/MonkeyRecords/TrialRecords/', animal,'/','BSD-image-flash-trial_records-',date,'.mat'];
   save_append = 0;
   while exist(saveSTR,'file') == 2;
@@ -28,17 +28,17 @@ function BSD_image_flash(debug_on);
     distance = 47;
     pix_per_cm = 36.2;
     va_in_pix  = va2pix(distance,pix_per_cm);
-   Trans_mx_shift = [0 -30];  # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
+    Trans_mx_shift = [0 0]  # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
     
-    fixation_target_deg = 1.1;      
-    trackWin_deg = 2.5;
+    fixation_target_deg = 0.9;      
+    trackWin_deg = 1.75;
    
-    stimulus_size_deg = [4,16];    
+    stimulus_size_deg = [2,4,8,16];    
     edge_rolloff_deg  = 0.2;
     stimulus_center = [825 675]; # change this so as to be defined in polar coordinates MAYBE LATER
     
     image_duration = 0.3;
-    blank_duration = 0.75;
+    blank_duration = 0.5;
     blank = 0;    
     waitframes = ceil(image_duration*120);    
     waitframes2 = ceil(blank_duration*120);    
@@ -51,7 +51,7 @@ function BSD_image_flash(debug_on);
     max_trs              = 10000;    
     max_fixation_duration    = 24;
     min_fixation_duration    = 0.1;
-    reward_scaler = 0.7;
+    reward_scaler = 0.6;
     FR = 120;    
     fix_point_Window_size = 100;
     trackMarkerColor = [255,0,0];
@@ -63,20 +63,20 @@ function BSD_image_flash(debug_on);
     distance = 47;
     pix_per_cm = 36.2;
     va_in_pix  = va2pix(distance,pix_per_cm);
-    Trans_mx_shift = [30 -45]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
+    Trans_mx_shift = [50 -50]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
     fill_fixation = 1;    
     black_white = 0;
     
-    fixation_target_deg = 1.1;      
-    trackWin_deg = 2.5;
+    fixation_target_deg = 0.8;
+    trackWin_deg = 1.3
    
-    stimulus_size_deg = [16];    
+    stimulus_size_deg = [16];
     edge_rolloff_deg  = 0.2;
     stimulus_center = [825 675]; # change this so as to be defined in polar coordinates MAYBE LATER
     
-    image_duration = 0.3;
-    blank_duration = 0.5;
-    blank = 0;    
+    image_duration = 0.5;
+    blank_duration = 2;
+    blank = 1;    
     waitframes = ceil(image_duration*120);    
     waitframes2 = ceil(blank_duration*120);        
     
@@ -86,7 +86,7 @@ function BSD_image_flash(debug_on);
     max_trs              = 10000;    
     max_fixation_duration    = 24;
     min_fixation_duration    = 0.1;
-    reward_scaler = 0.7;
+    reward_scaler = 0.5;
     FR = 120;    
     fix_point_Window_size = 100;
     trackMarkerColor = [255,0,0];
@@ -205,8 +205,15 @@ function BSD_image_flash(debug_on);
   mask_rect = [0 0 mask_grid mask_grid];
   mask_rect = CenterRectOnPoint(mask_rect, stimulus_center(1), stimulus_center(2));
   
-  specificImage = 1:100;
-  #specificImage = [1 3 5 9 11 13];
+  #specificImage = 1:100;
+  #specificImage = [3,4,5];
+  #specificImage = [6,7,8];
+  #specificImage = [9,10,11];
+  #specificImage = [12,13,14]; crashed
+  #specificImage = [15,16,17];
+  #specificImage = [18,19,20];
+  specificImage = [21,22,23,24];
+  
   numImage = length(specificImage);  
   fls = dir(image_dir);
   
@@ -509,10 +516,12 @@ function BSD_image_flash(debug_on);
         even = even + 1;
         if (blank == 1) && (mod(even, 2) == 1)
           stimulus_rect = [0 0 0 0];
-          #display(even)
+          #display(even)          
           Screen('FillRect', stimulus_window, grey);    
           Screen('FillRect', eyeTrack_window, grey);                        
-      
+          Screen('DrawTexture', eyeTrack_window, eyeTrack_imageTexture, [], rects(:,:,pos));
+          Screen('DrawTexture', stimulus_window, stimulus_imageTexture, [], rects(:,:,pos));
+          
           vbl1 = Screen('Flip', eyeTrack_window, vbl1 + (waitframes - 0.5) * ifi1);
           vbl2 = Screen('Flip', stimulus_window, vbl2 + (waitframes - 0.5) * ifi2);
         else

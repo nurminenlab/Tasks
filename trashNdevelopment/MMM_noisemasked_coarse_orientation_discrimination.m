@@ -6,7 +6,7 @@ close all;
 save_default_options('-mat7-binary');
 
 # use mouse instead of eye tracker
-mouse_track = 0;
+mouse_track = 1;
 debug_on = 0;
 save_records = 1;
 
@@ -73,7 +73,7 @@ elseif strcmp(animal,'Wolfjaw')
   d_target_extra       = 1.5;
   
   wait_fixation        = 1;
-  rewardConsume_period = 2;
+  rewardConsume_period = 1;
   max_fixation_time    = 2;
   min_target_time      = 0.2;  
   gaze_move_time       = 0.45;
@@ -94,6 +94,8 @@ elseif strcmp(animal,'Wolfjaw')
   d_target = (plateau_deg + edge_deg + d_target_extra)*va_in_pixels;
   reward_scaler = 0.5;
   animal_code = 'MM004';
+  wrong_target_timeout = 0.5;
+  no_fixation_timeout = 1;
   
 else
 
@@ -136,6 +138,9 @@ expt_info.pix_per_period       = pix_per_period
 expt_info.plateau_deg          = plateau_deg;
 expt_info.edge_deg             = edge_deg;
 expt_info.reward_scaler        = reward_scaler;
+expt_info.wrong_target_timeout = wrong_target_timeout;
+expt_info. no_fixation_timeout = no_fixation_timeout;
+
 fix_point_Window_size = track_win_pix;
 trackMarkerColor = [255,0,0];
 
@@ -416,6 +421,7 @@ while is_running
     
     reaction_time = nan;
     trial_error = 'no_fixation';
+    rewardConsume_period = no_fixation_timeout;
     on_target_time = nan;
     
   end  %
@@ -442,6 +448,7 @@ while is_running
       on_target = 0;
       on_target_time = toc(eyeTrack_clock);
       trial_error = 'broke_fixation';
+      rewardConsume_period = no_fixation_timeout;
       break;      
     end           
    
@@ -507,6 +514,7 @@ while is_running
     
     if gaze_moved && (toc(gaze_move_clock) > gaze_move_time)
       trial_error = 'no_response';
+       rewardConsume_period = no_fixation_timeout;
       break;
     end
     
@@ -540,6 +548,7 @@ while is_running
         waiting_for_response = 0;
         
         trial_error = 'wrong_target';
+        rewardConsume_period = wrong_target_timeout;
         selected_pos_X = not_target_pos_X(1);
         selected_pos_Y = not_target_pos_Y(1);
         reaction_time = toc(response_time_clock);
@@ -556,6 +565,7 @@ while is_running
         waiting_for_response = 0;
         
         trial_error = 'wrong_target';
+        rewardConsume_period = wrong_target_timeout;
         selected_pos_X = not_target_pos_X(2);
         selected_pos_Y = not_target_pos_Y(2);
         reaction_time = toc(response_time_clock);
@@ -572,6 +582,7 @@ while is_running
         waiting_for_response = 0;
         
         trial_error = 'wrong_target';
+        rewardConsume_period = wrong_target_timeout;
         selected_pos_X = not_target_pos_X(3);
         selected_pos_Y = not_target_pos_Y(3);
         reaction_time = toc(response_time_clock);
@@ -589,6 +600,7 @@ while is_running
     if toc(response_time_clock) > response_wait_time      
       waiting_for_response = 0; 
       trial_error = 'no_response'; 
+      rewardConsume_period = no_fixation_timeout;
       fixation_reaction_time  = NaN;
       reaction_time  = NaN;
       on_target_time = NaN; 
@@ -711,6 +723,8 @@ while is_running
   trial_records(tr_ind).selected_pos_X = selected_pos_X;
   trial_records(tr_ind).selected_pos_Y = selected_pos_Y;
   trial_records(tr_ind).contrast = contrast;
+  trial_records(tr_ind).rewardConsume_period = rewardConsume_period;
+  
   
   if tr_ind >= max_trs
     is_running = 0;

@@ -3,8 +3,12 @@ addpath('/home/vpixx/Tasks/Functions/');
 AssertOpenGL;
 sca;
 close all;
+contrast = 0;
+
+save_default_options('-mat7-binary');
 
 # use mouse instead of eye tracker
+
 mouse_track = 0;
 debug_on = 0;
 save_records = 1;
@@ -25,7 +29,7 @@ va_in_pixels = va2pix(distance,pix_per_cm);
 
 if strcmp(animal,'Sansa')
   
-  Trans_mx_shift = [30 -45]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
+  Trans_mx_shift = [30 0];# a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
   
   % task parameters
   fix_target_deg       = 1.8;
@@ -40,12 +44,12 @@ if strcmp(animal,'Sansa')
   min_target_time      = 0.2;  
   gaze_move_time       = 0.4;
   response_wait_time   = gaze_move_time;
-  max_trs              = 1000;
+  max_trs              = 10000;
   wrong_target_abort = 1;
   
   gridSize = 100;
-  contrasts = [0.04 0.08 0.16 0.32 0.64];
-  contrasts_idx = [1 1 2 2 3 3 4 5]; # workaround for weighted randomization of contrast  
+  contrasts = [0.01 0.02 0.04 0.08 0.16 0.32];
+  contrasts_idx = [1 1 2 2 3 3 4 5 6]; # workaround for weighted randomization of contrast  
   orientations = [0,90];
   pix_per_period = 33;
   plateau_deg = 1.5;
@@ -58,27 +62,28 @@ if strcmp(animal,'Sansa')
   
 elseif strcmp(animal,'Wolfjaw')
   
-  Trans_mx_shift = [15 0];# a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
+  Trans_mx_shift = [10 -20]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
   
   % task parameters
-  fix_target_deg       = 1.5; #fixation target size in degrees
+  fix_target_deg       = 1.5; # fixation target size in degrees
   fix_target_pix       = fix_target_deg*va_in_pixels;
-  track_win_deg        = 3.0; #blue ring around central fixation target
+  track_win_deg        = 3; # blue ring around central fixation target
   track_win_pix        = track_win_deg*va_in_pixels;
-  d_target_extra       = 1.75; #acceptance window for other targets
+  d_target_extra       = 3; # acceptance window for other targets
   
-  wait_fixation        = 1; #wait fixation time until next trial offered
-  rewardConsume_period = 1; #time between trials
-  max_fixation_time    = 2; #length of time that the monkey can look at the larger target
-  min_target_time      = 0.07; #min fixation time to central target before giving answer; increase to 0.2 gradually
+  wait_fixation        = 1; # wait fixation time until next trial offered
+  rewardConsume_period = 1; # time between trials
+  max_fixation_time    = 2; # length of time that the monkey can look at the larger target
+  min_target_time      = 0.1; # min fixation time to central target before giving answer; increase to 0.2 gradually
   gaze_move_time       = 0.4; 
   response_wait_time   = gaze_move_time;
-  max_trs              = 1000;
+  max_trs              = 10000;
   wrong_target_abort = 1;
   
   gridSize = 128;
-  contrasts = [0.08]; #can go lower
-  contrasts_idx = [1]; # workaround for weighted randomization of contrast
+  #contrasts = [0.01 0.02 0.04 0.08 0.16 0.32];
+  contrasts = [0.64];
+  contrasts_idx = [1];# workaround for weighted randomization of contrast
   orientations = [0,90];
   pix_per_period = 33;
   plateau_deg = 3;
@@ -88,6 +93,8 @@ elseif strcmp(animal,'Wolfjaw')
   d_target = (plateau_deg + edge_deg + d_target_extra)*va_in_pixels;
   reward_scaler = 0.6;
   animal_code = 'MM004';
+  wrong_target_timeout = 0.5;
+  no_fixation_timeout = 1;
   
 else
 
@@ -124,6 +131,8 @@ expt_info.pix_per_period       = pix_per_period
 expt_info.plateau_deg          = plateau_deg;
 expt_info.edge_deg             = edge_deg;
 expt_info.reward_scaler        = reward_scaler;
+expt_info.wrong_target_timeout = wrong_target_timeout;
+expt_info. no_fixation_timeout = no_fixation_timeout;
 
 fix_point_Window_size = track_win_pix;
 trackMarkerColor = [255,0,0];
@@ -300,7 +309,7 @@ while is_running
   grText_iTrack(:,target_pos) = grText_all_iTrack(1);
   
   tic();
-  while toc() < rewardConsume_period; # reward consume period needs to depend on the outcome of the previous trial
+  while toc() < rewardConsume_period;
       [keyIsDown, secs, keyCode, deltaSecs] = KbCheck();                    
       if ~mouse_track
         Datapixx('RegWrRd');
@@ -394,7 +403,9 @@ while is_running
     Screen('Flip', eyeTrack_window,0,1);
     
     reaction_time = nan;
+    fixation_reaction_time = nan;
     trial_error = 'no_fixation';
+    rewardConsume_period = no_fixation_timeout;
     on_target_time = nan;
     selected_pos_X = nan;
     selected_pos_Y = nan;
@@ -422,6 +433,7 @@ while is_running
     if sqrt((XY(1) - X(pos))^2 + (XY(2) - Y(pos))^2) >= trackWindow      
       on_target = 0;      
       trial_error = 'broke_fixation';
+      rewardConsume_period = no_fixation_timeout;
       on_target_time = toc(eyeTrack_clock);
       selected_pos_X = nan;
       selected_pos_Y = nan;
@@ -491,6 +503,7 @@ while is_running
     
     if gaze_moved && (toc(gaze_move_clock) > gaze_move_time)
       trial_error = 'no_response';
+      rewardConsume_period = no_fixation_timeout;
       selected_pos_X = nan;
       selected_pos_Y = nan;
       reaction_time = nan;
@@ -509,7 +522,7 @@ while is_running
       reward_time_clock = tic();
       tracking_reward = 1;
       
-      trial_error = 'hit';
+      trial_error = 'hit'; #no need to setup RewardConsume_period
       selected_pos_X = target_pos_X;
       selected_pos_Y = target_pos_Y;
       reaction_time = toc(response_time_clock);
@@ -527,6 +540,7 @@ while is_running
         waiting_for_response = 0;
         
         trial_error = 'wrong_target';
+        rewardConsume_period = wrong_target_timeout;
         selected_pos_X = not_target_pos_X(1);
         selected_pos_Y = not_target_pos_Y(1);
         reaction_time = toc(response_time_clock);
@@ -543,6 +557,7 @@ while is_running
         waiting_for_response = 0;
         
         trial_error = 'wrong_target';
+        rewardConsume_period = wrong_target_timeout;
         selected_pos_X = not_target_pos_X(2);
         selected_pos_Y = not_target_pos_Y(2);
         reaction_time = toc(response_time_clock);
@@ -559,6 +574,7 @@ while is_running
         waiting_for_response = 0;
         
         trial_error = 'wrong_target';
+        rewardConsume_period = wrong_target_timeout;
         selected_pos_X = not_target_pos_X(3);
         selected_pos_Y = not_target_pos_Y(3);
         reaction_time = toc(response_time_clock);
@@ -576,6 +592,7 @@ while is_running
     if toc(response_time_clock) > response_wait_time      
       waiting_for_response = 0; 
       trial_error = 'no_response';
+      rewardConsume_period = no_fixation_timeout;
       selected_pos_X = not_target_pos_X(2);
       selected_pos_Y = not_target_pos_Y(2);     
       reaction_time = nan;
@@ -632,7 +649,8 @@ while is_running
       end
       # turn pump off
       Datapixx('SetDoutValues', 0);
-      Datapixx('RegWrRd');      
+      Datapixx('RegWrRd');
+      rewardConsume_period = no_fixation_timeout; #To give sometime to consume      
       break;
     end
     
@@ -648,6 +666,7 @@ while is_running
       # turn pump off
       Datapixx('SetDoutValues', 0);
       Datapixx('RegWrRd');
+      rewardConsume_period = no_fixation_timeout; #To give sometime to consume   
       tracking_reward = 0;      
       break;
     end 
@@ -693,5 +712,7 @@ while is_running
   trial_records(tr_ind).selected_pos_X = selected_pos_X;
   trial_records(tr_ind).selected_pos_Y = selected_pos_Y;
   trial_records(tr_ind).contrast = contrast;
+  trial_records(tr_ind).rewardConsume_period = rewardConsume_period;
+  
 
 end
