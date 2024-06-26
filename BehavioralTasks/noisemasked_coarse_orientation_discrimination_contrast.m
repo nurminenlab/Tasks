@@ -59,6 +59,18 @@ if strcmp(animal,'Sansa')
   d_target = (plateau_deg + edge_deg + d_target_extra)*va_in_pixels;
   reward_scaler = 0.5;
   animal_code = 'MM001';  
+  wrong_target_timeout = 0.5;
+  no_fixation_timeout = 1;
+  
+  driveAP = 4.0
+  driveML = 5.0;
+  sex = 'F';
+  DOB = nan;
+  handler = 'SC';
+  experimenters = 'SCLN'; 
+  weight = 421;   
+  penetration_wait_time = 30;
+  penetration_time = 10;
   
 elseif strcmp(animal,'Wolfjaw')
   
@@ -95,6 +107,16 @@ elseif strcmp(animal,'Wolfjaw')
   animal_code = 'MM004';
   wrong_target_timeout = 0.5;
   no_fixation_timeout = 1;
+  
+  driveAP = 4.0
+  driveML = 5.0;
+  sex = 'M';
+  DOB = nan;
+  handler = 'SC';
+  experimenters = 'SCLN'; 
+  weight = 421;   
+  penetration_wait_time = 30;
+  penetration_time = 10;
   
 else
 
@@ -156,6 +178,9 @@ if ~mouse_track
   Scale_mx(4) = by(2);
   Trans_mx = [bx(1)+Trans_mx_shift(1), by(1)+Trans_mx_shift(2)]';
 end
+
+expt_info.Scale_mx = Scale_mx;
+expt_info.Trans_mx = Trans_mx;
 
 % Here we call some default settings for setting up Psychtoolbox
 PsychDefaultSetup(2);
