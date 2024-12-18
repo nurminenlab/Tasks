@@ -1,15 +1,15 @@
-function [PC,response,running_PC] = percentage_correct(trial_records)
-  
+function [PC,response,running_PC] = percentage_correct(expt_info)
+
+  trial_records = expt_info.trial_records;  
   # for moving average
-  n_trials = 10;
+  n_trials = 20;
   response = nan*ones(1,length(trial_records));
   
   for i = 1:length(trial_records)
-    if strcmp(trial_records(i).trial_error,'hit')
+    if strcmp(trial_records(i).trial_error,'hit') || strcmp(trial_records(i).trial_error,'wrong_target')
       response(i) = 1;
-    elseif strcmp(trial_records(i).trial_error,'miss')
-      response(i) = 0;
     else
+      response(i) = 0;    
       # do nothing
     end  
   endfor

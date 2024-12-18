@@ -1,5 +1,4 @@
-function BSD_image_flash(debug_on);
-
+function BSD_grating_flash_laser(debug_on);
  
   % prepare PsychoToolbox
   addpath('/home/vpixx/Tasks/Functions/');
@@ -14,30 +13,34 @@ function BSD_image_flash(debug_on);
   mouse_track = 0;
   save_records = 1;
   
-  animal = 'Sansa';
+  animal = 'Wolfjaw';
   saveSTR = ['/home/vpixx/MonkeyRecords/TrialRecords/', animal,'/','BSD-image-flash-trial_records-',date,'.mat'];
   save_append = 0;
   while exist(saveSTR,'file') == 2;
     save_append = save_append + 1;
     saveSTR = ['/home/vpixx/MonkeyRecords/TrialRecords/', animal,'/','BSD-image-flash-trial_records-',date,'_v',num2str(save_append),'.mat'];
   end  
-
+  
   % user defined parameters
-  if strcmp(animal,'Wolfjaw')    
+  if strcmp(animal,'Wolfjaw')
     # under development
     distance = 47;
     pix_per_cm = 36.2;
     va_in_pix  = va2pix(distance,pix_per_cm);
-    Trans_mx_shift = [-10 -10];  # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
+    Trans_mx_shift = [0 0];  # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels.
     
-    fixation_target_deg = 0.75;      
-    trackWin_deg = 1.3;
+    fixation_target_deg = 0.9;
+    trackWin_deg = 1.5;   
    
-    stimulus_size_deg = [16];    
-    edge_rolloff_deg  = 0.2;
-    stimulus_center = [825 675]; # change this so as to be defined in polar coordinates MAYBE LATER
+    stimulus_size_deg = [1];    
+    edge_rolloff_deg  = 0.05;
+    orientations      = 0:30:180;
+    pix_per_period    = va_in_pix;
     
-    image_duration = 0.5;    
+    R = 3;
+    thetas = 135;
+    
+    image_duration = 0.5;
     blank_duration = 2;
     blank = 1;    
     waitframes = ceil(image_duration*120);    
@@ -51,38 +54,49 @@ function BSD_image_flash(debug_on);
     max_trs              = 10000;    
     max_fixation_duration    = 24;
     min_fixation_duration    = 0.1;
-    reward_scaler = 0.6;
+    reward_scaler = 0.50;
     FR = 120;    
     fix_point_Window_size = 100;
     trackMarkerColor = [255,0,0];
     gaze_position = nan*ones(2,FR*ceil((wait_fixation+max_fixation_duration)));
     TTLwidth = 0.15;
     
-    driveAP = 5.5;
-    driveML = 4;
-    sex = 'M';
+    driveAP = 5;
+    driveML = 5;
+    sex = 'F';
     DOB = nan;
     handler = 'SC';
-    experimenters = 'SCMM'; 
-    weight = 431;
-    penetration_wait_time = 20;
+    experimenters = 'SCLNMM'; 
+    weight = 478;
+    penetration_wait_time = 30;
     penetration_time = 15;
+  
+    opsin = 'ChR';
+    promoter = 'S2E5';
+    reporter = 'mCherry';
+    laserW   = 1.01;
+    fiberD   = 400;
+    laserModel = 'optoEngine1.5W';
   
   elseif strcmp(animal,'Sansa')
     
     distance = 47;
     pix_per_cm = 36.2;
     va_in_pix  = va2pix(distance,pix_per_cm);
-    Trans_mx_shift = [35 -5];# a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
+    Trans_mx_shift = [35 -20]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
     fill_fixation = 1;    
     black_white = 0;
     
-    fixation_target_deg = 1.2;#0.9;
-    trackWin_deg = 2;#1.3
-   
-    stimulus_size_deg = [16];
-    edge_rolloff_deg  = 0.2;
-    stimulus_center = [825 675]; # change this so as to be defined in polar coordinates MAYBE LATER
+    fixation_target_deg = 0.75;
+    trackWin_deg = 1.3     
+    
+    stimulus_size_deg = [1];    
+    edge_rolloff_deg  = 0.05;
+    orientations      = 0:30:180;
+    pix_per_period    = va_in_pix;
+    
+    R = 3;
+    thetas = 135;    
     
     image_duration = 0.5;
     blank_duration = 2;
@@ -96,49 +110,42 @@ function BSD_image_flash(debug_on);
     max_trs              = 10000;    
     max_fixation_duration    = 24;
     min_fixation_duration    = 0.1;
-    reward_scaler = 0.6;
+    reward_scaler = 0.5;
     FR = 120;    
     fix_point_Window_size = 100;
     trackMarkerColor = [255,0,0];
     gaze_position = nan*ones(2,FR*ceil((wait_fixation+max_fixation_duration)));    
     TTLwidth = 0.15;
     
-    driveAP = nan;
-    driveML = nan;
+    driveAP = 5.5;
+    driveML = 5;
     sex = 'F';
     DOB = nan;
     handler = 'SC';
-    experimenters = 'SC'; 
-    weight = 457;
-    penetration_wait_time = nan;
-    penetration_time = nan;
+    experimenters = 'SCMM'; 
+    weight = 472;
+    penetration_wait_time = 21;
+    penetration_time = 10;
+    
+    opsin = 'ChR';
+    promoter = 'S2E5';
+    reporter = 'mCherry';
+    laserW   = 1.01;
+    fiberD   = 400;
+    laserModel = 'optoEngine1.5W';
     
   else
     fprintf('Strange animal \n');
   end   
-  
-  #specificImage = 1:100;
-  #specificImage = [3,4,5];
-  #specificImage = [6,7,8];
-  #specificImage = [9,10,11];
-  #specificImage = [12,13,14]; crashed
-  #specificImage = [15,16,17];
-  #specificImage = [18,19,20];
-  #specificImage = [21,22,23,24]; # GOOD
-  #specificImage = [25,26,27,28];
-  #specificImage = [33,34,35,36];
-  #specificImage = [37,38,39,40];
-  #specificImage = [41,42,43,44];
-  #specificImage = [45,46,47,48];
-  #specificImage = [49,50,51,52];
-  #specificImage = [53,54,55,56];
-  #specificImage = [57,58,59,60];
-   specificImage = [61,62,63,64];
-  
+     
   # raised cosine mask parameters  
-  mask_grid = 962;
+  mask_grid = 256
   plateau_pix = stimulus_size_deg*va_in_pix;
   edge_pix = edge_rolloff_deg*va_in_pix;
+  
+  R = R*va_in_pix;
+  thetas = deg2rad(thetas);
+  [Xoff, Yoff] = pol2cart(thetas,R);
   
   # expt params
   expt_info.distance   = distance;
@@ -153,7 +160,7 @@ function BSD_image_flash(debug_on);
   
   expt_info.stimulus_size_deg = stimulus_size_deg;
   expt_info.edge_rolloff_deg = edge_rolloff_deg;  
-  expt_info.stimulus_center = stimulus_center;
+  #expt_info.stimulus_center = stimulus_center;
   
   expt_info.image_duration = image_duration;
   expt_info.blank_duration = blank_duration;  
@@ -175,6 +182,13 @@ function BSD_image_flash(debug_on);
   expt_info.handler = handler;
   expt_info.experimenters = experimenters;
   expt_info.weight  = weight;
+  
+  expt_info.opsin = opsin;
+  expt_info.promoter = promoter;
+  expt_info.reporter = reporter;
+  expt_info.laserW   = laserW;
+  expt_info.fiberD   = fiberD;  
+  expt_info.laserModel = laserModel;
   
   if mouse_track
     XY = ones(2,1)*nan;
@@ -255,61 +269,30 @@ function BSD_image_flash(debug_on);
   end
   
   mask_rect = [0 0 mask_grid mask_grid];
-  mask_rect = CenterRectOnPoint(mask_rect, stimulus_center(1), stimulus_center(2));  
+  mask_rect = CenterRectOnPoint(mask_rect, screenXpixels/2+Xoff, screenYpixels/2+Yoff);    
   
-  numImage = length(specificImage);  
-  fls = dir(image_dir);
-  
-  all_rects = ones(numImage,4)*NaN;
-  rect_type = ones(numImage,1)*NaN;
   # make textures
-  for i = 1:numImage
-    % Here we load in an image from file. This one is a image of rabbits that
-    % is included with PTB, then shift the images to blur them into the background
-    theImageLocations{i} = [fls(specificImage(i)+2).folder,'/',fls(specificImage(i)+2).name];    
-    theImages{i} = imread(theImageLocations{i});
-    theImages{i} = theImages{i};
-
-    % Resize and Get the size of the image
-    [s1, s2, s3] = size(theImages{i});
-    
-    if s1 > s2
-      rect_type(i) = 1;
-    elseif s1 < s2
-      rect_type(i) = 2;          
-    endif
-    
-    all_rects(i,:) = [0 0 2*s1 2*s2];
-    
-    if black_white == 1      
-      theImages{i} = mean(theImages{i},3);
-    end
-
-    % Make the image into a texture
-    imageTextures_stimulus{i} = Screen('MakeTexture', stimulus_window, theImages{i});
-    imageTextures_eyeTrack{i} = Screen('MakeTexture', eyeTrack_window, theImages{i});
-
-  end  
-
-  #all_rects = unique(all_rects,'rows');  
-  all_rects = round(all_rects);
+  # generate gratings
+  imageTextures_stimulus = generate_grating_textures(mask_grid,orientations,pix_per_period,stimulus_window,stimulus_screenNumber);
+  imageTextures_eyeTrack = generate_grating_textures(mask_grid,orientations,pix_per_period,eyeTrack_window,eyeTrack_screenNumber);    
+  numImage = length(imageTextures_stimulus);
   
+  all_rects = [0 0 mask_grid-1 mask_grid-1];
   # translate to correct location
   for i = 1:size(all_rects,1)
-    all_rects(i,:) = CenterRectOnPoint(all_rects(i,:),stimulus_center(1), stimulus_center(2));
+    all_rects(i,:) = CenterRectOnPoint(all_rects(i,:),screenXpixels/2+Xoff, screenYpixels/2+Yoff);
   endfor 
   
-  expt_info.imageLocation = theImageLocations;
+  #expt_info.imageLocation = theImageLocations;
   
   Screen('TextSize', eyeTrack_window, 50);
   Screen('TextFont', eyeTrack_window, 'Courier');
   DrawFormattedText(eyeTrack_window, "Ready", screenXpixels/2 - 70, screenYpixels/2, [256 0 0]);
   Screen('Flip', eyeTrack_window);    
   
-  counter = randperm(numImage, numImage); 
+  counter = randperm(numImage, numImage);
   count = 0;
-  trCount = [];
-  
+  trCount = [];  
   
   imgScaleOrder = randperm(length(stimulus_size_deg),length(stimulus_size_deg));
   scaleCount = 1;     
@@ -382,6 +365,7 @@ function BSD_image_flash(debug_on);
       tracking_reward = 0;
       on_target = 0;      
       even = 0;
+      laser_counter = 1;
       
       if tr_ind > 1
         Screen('Flip', eyeTrack_window,0);
@@ -490,26 +474,34 @@ function BSD_image_flash(debug_on);
             count = count + 1;
           end                       
           
-          stimulus_rect = all_rects(rect_type(counter(count)),:);          
+          stimulus_rect = all_rects; # legacy reasons
           startCounter = count;
 
           # first stimulus after the monkey acquired fixation
-          Screen('DrawTexture', eyeTrack_window, imageTextures_eyeTrack{counter(count)}, [], stimulus_rect, 0);
+          Screen('DrawTexture', eyeTrack_window, imageTextures_eyeTrack(counter(count)), [], stimulus_rect, 0);
           Screen('FillOval', eyeTrack_window, [128 128 128], fillStimulus);
           Screen('DrawTexture', eyeTrack_window, mask_text_eyeTrack(imgScaleOrder(scaleCount)), [], mask_rect, 0);
           Screen('DrawTexture', eyeTrack_window, eyeTrack_imageTexture, [], rects(:,:,pos));
           Screen('FrameOval',eyeTrack_window,[0 0 255],fix_point_Windowrect,3,3); # to mark fixation window
        
-          Screen('DrawTexture', stimulus_window, imageTextures_stimulus{counter(count)}, [], stimulus_rect, 0);
+          Screen('DrawTexture', stimulus_window, imageTextures_stimulus(counter(count)), [], stimulus_rect, 0);
           Screen('FillOval', stimulus_window, [128 128 128], fillStimulus);
           Screen('DrawTexture', stimulus_window, mask_text_stimulus(imgScaleOrder(scaleCount)), [], mask_rect, 0);
           Screen('DrawTexture', stimulus_window, stimulus_imageTexture, [], rects(:,:,pos)); 
         
           vbl1 = Screen('Flip', stimulus_window, greyScreen_stimulus_vbl + rewardConsume_period,1);     
           vbl2 = Screen('Flip', eyeTrack_window, greyScreen_stimulus_vbl + rewardConsume_period,1);
+                    
+          if (rem(tr_ind,2) == 0)                    
+            # turn laser on and send image TTL
+            sendTTL(8388692,8388628,TTLwidth);
+            laser_counter = laser_counter+1;
+          else
+            # keep laser down and send image TTL
+            sendTTL(84,20,TTLwidth);            
+            laser_counter = laser_counter+1;
+          endif                    
           
-          # send TTL
-          sendTTL(84,20,TTLwidth);
           trImage(trImage_idx) = counter(count);
           trScale(trScale_idx) = imgScaleOrder(scaleCount);
           break;
@@ -557,9 +549,8 @@ function BSD_image_flash(debug_on);
         end            
         
         even = even + 1;
-        if (blank == 1) && (mod(even, 2) == 1)
-          stimulus_rect = [0 0 0 0];
-          #display(even)          
+        if (blank == 1) && (mod(even, 2) == 1) # blank
+          stimulus_rect = [0 0 0 0];          
           Screen('FillRect', stimulus_window, grey);    
           Screen('FillRect', eyeTrack_window, grey);                        
           Screen('DrawTexture', eyeTrack_window, eyeTrack_imageTexture, [], rects(:,:,pos));
@@ -567,16 +558,21 @@ function BSD_image_flash(debug_on);
           
           vbl1 = Screen('Flip', eyeTrack_window, vbl1 + (waitframes - 0.5) * ifi1);
           vbl2 = Screen('Flip', stimulus_window, vbl2 + (waitframes - 0.5) * ifi2);
+          
+          # turn down laser
+          Datapixx('SetDoutValues', 20);
+          Datapixx('RegWrRd');
+          
         else
-          stimulus_rect = all_rects(rect_type(counter(count)),:);         
+          stimulus_rect = all_rects; 
       
-          Screen('DrawTexture', eyeTrack_window, imageTextures_eyeTrack{counter(count)}, [], stimulus_rect, 0);
+          Screen('DrawTexture', eyeTrack_window, imageTextures_eyeTrack(counter(count)), [], stimulus_rect, 0);
           Screen('FillOval', eyeTrack_window, [128 128 128], fillStimulus);
           Screen('DrawTexture', eyeTrack_window, mask_text_eyeTrack(imgScaleOrder(scaleCount)), [], mask_rect, 0);
           Screen('DrawTexture', eyeTrack_window, eyeTrack_imageTexture, [], rects(:,:,pos));      
           Screen('FrameOval',eyeTrack_window,[0 0 255],fix_point_Windowrect,3,3); # to mark fixation window
       
-          Screen('DrawTexture', stimulus_window, imageTextures_stimulus{counter(count)}, [], stimulus_rect, 0);
+          Screen('DrawTexture', stimulus_window, imageTextures_stimulus(counter(count)), [], stimulus_rect, 0);
           Screen('FillOval', stimulus_window, [128 128 128], fillStimulus);
           Screen('DrawTexture', stimulus_window, mask_text_stimulus(imgScaleOrder(scaleCount)), [], mask_rect, 0);
           Screen('DrawTexture', stimulus_window, stimulus_imageTexture, [], rects(:,:,pos));
@@ -585,8 +581,16 @@ function BSD_image_flash(debug_on);
           vbl1 = Screen('Flip', eyeTrack_window, vbl1 + (waitframes - 0.5) * ifi1);
           vbl2 = Screen('Flip', stimulus_window, vbl2 + (waitframes - 0.5) * ifi2);
           
-          # send TTL
-          sendTTL(84,20,TTLwidth);
+          if (rem(laser_counter,2) == 0)
+            # keep laser down and send stimulus TTL
+            sendTTL(84,20,TTLwidth);
+            laser_counter = laser_counter + 1;
+          else
+            # fire up the LASER and send stimulus TTL
+            sendTTL(8388692,8388628,TTLwidth);
+            laser_counter = laser_counter + 1;
+          endif                  
+          
           trImage_idx = trImage_idx + 1;
           trScale_idx = trScale_idx + 1;
           trImage(trImage_idx) = counter(count);
@@ -607,9 +611,9 @@ function BSD_image_flash(debug_on);
           Screen('Flip', eyeTrack_window);              
           Screen('Flip', stimulus_window); 
         
-          reward_size_time = toc(eyeTrack_clock);      
-          trial_error = 'broke_early';
+          reward_size_time = toc(eyeTrack_clock);                
           if reward_size_time > min_fixation_duration
+            trial_error = 'broke_early';
             reward_size_time = reward_scaler*sqrt(reward_size_time);
             # turn
             Datapixx('SetDoutValues', 1);
@@ -661,7 +665,10 @@ function BSD_image_flash(debug_on);
         Screen('FillOval', eyeTrack_window, trackMarkerColor, eyePos_rect);
       
         if keyIsDown && KbName(keyCode) == 'q';
-          is_running = 0;      
+          is_running = 0;
+          # to ensure that LASER is down
+          Datapixx('SetDoutValues', 0);
+          Datapixx('RegWrRd');      
           close all;
           sca;
           expt_info.trial_records = trial_records;
@@ -687,6 +694,9 @@ function BSD_image_flash(debug_on);
       [keyIsDown, secs, keyCode, deltaSecs] = KbCheck();
       if keyIsDown && KbName(keyCode) == 'q';
         is_running = 0;      
+        # to ensure that LASER is down
+        Datapixx('SetDoutValues', 0);
+        Datapixx('RegWrRd');
         close all;
         sca;
         expt_info.trial_records = trial_records;
@@ -694,8 +704,7 @@ function BSD_image_flash(debug_on);
           save('-mat7-binary',saveSTR,'expt_info');
         end        
         break;
-      end  
-    
+      end      
     
       if tr_ind >= max_trs
         is_running = 0;
@@ -707,6 +716,9 @@ function BSD_image_flash(debug_on);
     end
   
 catch 
+  # to ensure that LASER is down
+  Datapixx('SetDoutValues', 0);
+  Datapixx('RegWrRd');
   lasterr
   sca;  
 end

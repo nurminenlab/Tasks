@@ -1,5 +1,4 @@
-function BSD_image_flash(debug_on);
-
+ function BSD_image_flash(debug_on);
  
   % prepare PsychoToolbox
   addpath('/home/vpixx/Tasks/Functions/');
@@ -21,23 +20,23 @@ function BSD_image_flash(debug_on);
     save_append = save_append + 1;
     saveSTR = ['/home/vpixx/MonkeyRecords/TrialRecords/', animal,'/','BSD-image-flash-trial_records-',date,'_v',num2str(save_append),'.mat'];
   end  
-
+  
   % user defined parameters
-  if strcmp(animal,'Wolfjaw')    
+  if strcmp(animal,'Wolfjaw')
     # under development
     distance = 47;
     pix_per_cm = 36.2;
     va_in_pix  = va2pix(distance,pix_per_cm);
-    Trans_mx_shift = [10 -10];  # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
+    Trans_mx_shift = [0 -20];  # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels.
     
-    fixation_target_deg = 0.9;      
+    fixation_target_deg = 0.9;
     trackWin_deg = 1.5;
    
     stimulus_size_deg = [16];    
     edge_rolloff_deg  = 0.2;
     stimulus_center = [825 675]; # change this so as to be defined in polar coordinates MAYBE LATER
     
-    image_duration = 0.5;    
+    image_duration = 0.5;
     blank_duration = 2;
     blank = 1;    
     waitframes = ceil(image_duration*120);    
@@ -51,33 +50,42 @@ function BSD_image_flash(debug_on);
     max_trs              = 10000;    
     max_fixation_duration    = 24;
     min_fixation_duration    = 0.1;
-    reward_scaler = 0.6;
+    reward_scaler = 0.50;
     FR = 120;    
     fix_point_Window_size = 100;
     trackMarkerColor = [255,0,0];
     gaze_position = nan*ones(2,FR*ceil((wait_fixation+max_fixation_duration)));
     TTLwidth = 0.15;
     
-    driveAP = 4.0
-    driveML = 5.5;
+    driveAP = nan;
+    driveML = nan;
     sex = 'M';
     DOB = nan;
     handler = 'SC';
-    experimenters = 'SCMM'; 
-    weight = 424;   
-    penetration_wait_time = 20;
-    penetration_time = 10;
+    experimenters = 'SCLNMM'; 
+    weight = 478;
+    penetration_wait_time = 30;
+    penetration_time = 15;
+  
+    opsin = 'ChR';
+    promoter = 'S2E5';
+    reporter = 'mCherry';
+    laserW   = 1.01;
+    fiberD   = 400;
+    laserModel = 'optoEngine1.5W';
+    optrodeType = 'SC-optrode';
+    version     = '3';
   
   elseif strcmp(animal,'Sansa')
     
     distance = 47;
     pix_per_cm = 36.2;
     va_in_pix  = va2pix(distance,pix_per_cm);
-    Trans_mx_shift = [50 -50]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
+    Trans_mx_shift = [35 -20]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
     fill_fixation = 1;    
     black_white = 0;
     
-    fixation_target_deg = 0.8;
+    fixation_target_deg = 0.75;
     trackWin_deg = 1.3
    
     stimulus_size_deg = [16];
@@ -103,15 +111,24 @@ function BSD_image_flash(debug_on);
     gaze_position = nan*ones(2,FR*ceil((wait_fixation+max_fixation_duration)));    
     TTLwidth = 0.15;
     
-    driveAP = 4.0;
-    driveML = 5.0;
-    sex = 'M';
+    driveAP = 5.5;
+    driveML = 5;
+    sex = 'F';
     DOB = nan;
     handler = 'SC';
-    experimenters = 'SCLN'; 
-    weight = 421;   
-    penetration_wait_time = 30;
+    experimenters = 'SCMM'; 
+    weight = 472;
+    penetration_wait_time = 21;
     penetration_time = 10;
+    
+    opsin = 'ChR';
+    promoter = 'S2E5';
+    reporter = 'mCherry';
+    laserW   = 1.01;
+    fiberD   = 400;
+    laserModel = 'optoEngine1.5W';
+    optrodeType = 'SC-optrode';
+    version     = '3';   
     
   else
     fprintf('Strange animal \n');
@@ -126,7 +143,9 @@ function BSD_image_flash(debug_on);
   #specificImage = [18,19,20];
   #specificImage = [21,22,23,24]; # GOOD
   #specificImage = [25,26,27,28];
-  specificImage = [33,34,35,36];
+  #specificImage = [33,34,35,36];
+  #specificImage = [37,38,39,40];
+  specificImage = [41,42,43,44];
   
   # raised cosine mask parameters  
   mask_grid = 962;
@@ -168,6 +187,16 @@ function BSD_image_flash(debug_on);
   expt_info.handler = handler;
   expt_info.experimenters = experimenters;
   expt_info.weight  = weight;
+  
+  expt_info.opsin = opsin;
+  expt_info.promoter = promoter;
+  expt_info.reporter = reporter;
+  expt_info.laserW   = laserW;
+  expt_info.fiberD   = fiberD;
+  
+  expt_info.laserModel = laserModel;
+  expt_info.optrodeType = optrodeType;
+  expt_info.version     = version;
   
   if mouse_track
     XY = ones(2,1)*nan;
@@ -299,10 +328,9 @@ function BSD_image_flash(debug_on);
   DrawFormattedText(eyeTrack_window, "Ready", screenXpixels/2 - 70, screenYpixels/2, [256 0 0]);
   Screen('Flip', eyeTrack_window);    
   
-  counter = randperm(numImage, numImage); 
+  counter = randperm(numImage, numImage);
   count = 0;
-  trCount = [];
-  
+  trCount = [];  
   
   imgScaleOrder = randperm(length(stimulus_size_deg),length(stimulus_size_deg));
   scaleCount = 1;     
@@ -375,6 +403,7 @@ function BSD_image_flash(debug_on);
       tracking_reward = 0;
       on_target = 0;      
       even = 0;
+      laser_counter = 1;
       
       if tr_ind > 1
         Screen('Flip', eyeTrack_window,0);
@@ -500,9 +529,17 @@ function BSD_image_flash(debug_on);
         
           vbl1 = Screen('Flip', stimulus_window, greyScreen_stimulus_vbl + rewardConsume_period,1);     
           vbl2 = Screen('Flip', eyeTrack_window, greyScreen_stimulus_vbl + rewardConsume_period,1);
+                    
+          if (rem(tr_ind,2) == 0)                    
+            # turn laser on and send image TTL
+            sendTTL(8388692,8388628,TTLwidth);
+            laser_counter = laser_counter+1;
+          else
+            # keep laser down and send image TTL
+            sendTTL(84,20,TTLwidth);            
+            laser_counter = laser_counter+1;
+          endif                    
           
-          # send TTL
-          sendTTL(84,20,TTLwidth);
           trImage(trImage_idx) = counter(count);
           trScale(trScale_idx) = imgScaleOrder(scaleCount);
           break;
@@ -550,9 +587,8 @@ function BSD_image_flash(debug_on);
         end            
         
         even = even + 1;
-        if (blank == 1) && (mod(even, 2) == 1)
-          stimulus_rect = [0 0 0 0];
-          #display(even)          
+        if (blank == 1) && (mod(even, 2) == 1) # blank
+          stimulus_rect = [0 0 0 0];          
           Screen('FillRect', stimulus_window, grey);    
           Screen('FillRect', eyeTrack_window, grey);                        
           Screen('DrawTexture', eyeTrack_window, eyeTrack_imageTexture, [], rects(:,:,pos));
@@ -560,6 +596,11 @@ function BSD_image_flash(debug_on);
           
           vbl1 = Screen('Flip', eyeTrack_window, vbl1 + (waitframes - 0.5) * ifi1);
           vbl2 = Screen('Flip', stimulus_window, vbl2 + (waitframes - 0.5) * ifi2);
+          
+          # turn down laser
+          Datapixx('SetDoutValues', 20);
+          Datapixx('RegWrRd');
+          
         else
           stimulus_rect = all_rects(rect_type(counter(count)),:);         
       
@@ -578,8 +619,16 @@ function BSD_image_flash(debug_on);
           vbl1 = Screen('Flip', eyeTrack_window, vbl1 + (waitframes - 0.5) * ifi1);
           vbl2 = Screen('Flip', stimulus_window, vbl2 + (waitframes - 0.5) * ifi2);
           
-          # send TTL
-          sendTTL(84,20,TTLwidth);
+          if (rem(laser_counter,2) == 0)
+            # keep laser down and send stimulus TTL
+            sendTTL(84,20,TTLwidth);
+            laser_counter = laser_counter + 1;
+          else
+            # fire up the LASER and send stimulus TTL
+            sendTTL(8388692,8388628,TTLwidth);
+            laser_counter = laser_counter + 1;
+          endif                  
+          
           trImage_idx = trImage_idx + 1;
           trScale_idx = trScale_idx + 1;
           trImage(trImage_idx) = counter(count);
@@ -600,9 +649,9 @@ function BSD_image_flash(debug_on);
           Screen('Flip', eyeTrack_window);              
           Screen('Flip', stimulus_window); 
         
-          reward_size_time = toc(eyeTrack_clock);      
-          trial_error = 'broke_early';
+          reward_size_time = toc(eyeTrack_clock);                
           if reward_size_time > min_fixation_duration
+            trial_error = 'broke_early';
             reward_size_time = reward_scaler*sqrt(reward_size_time);
             # turn
             Datapixx('SetDoutValues', 1);
@@ -654,7 +703,10 @@ function BSD_image_flash(debug_on);
         Screen('FillOval', eyeTrack_window, trackMarkerColor, eyePos_rect);
       
         if keyIsDown && KbName(keyCode) == 'q';
-          is_running = 0;      
+          is_running = 0;
+          # to ensure that LASER is down
+          Datapixx('SetDoutValues', 0);
+          Datapixx('RegWrRd');      
           close all;
           sca;
           expt_info.trial_records = trial_records;
@@ -680,6 +732,9 @@ function BSD_image_flash(debug_on);
       [keyIsDown, secs, keyCode, deltaSecs] = KbCheck();
       if keyIsDown && KbName(keyCode) == 'q';
         is_running = 0;      
+        # to ensure that LASER is down
+        Datapixx('SetDoutValues', 0);
+        Datapixx('RegWrRd');
         close all;
         sca;
         expt_info.trial_records = trial_records;
@@ -687,8 +742,7 @@ function BSD_image_flash(debug_on);
           save('-mat7-binary',saveSTR,'expt_info');
         end        
         break;
-      end  
-    
+      end      
     
       if tr_ind >= max_trs
         is_running = 0;
@@ -700,6 +754,9 @@ function BSD_image_flash(debug_on);
     end
   
 catch 
+  # to ensure that LASER is down
+  Datapixx('SetDoutValues', 0);
+  Datapixx('RegWrRd');
   lasterr
   sca;  
 end

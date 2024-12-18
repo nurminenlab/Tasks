@@ -1,4 +1,4 @@
-function BSD_image_flash(debug_on);
+function sparse_noise(debug_on);
 
  
   % prepare PsychoToolbox
@@ -28,7 +28,7 @@ function BSD_image_flash(debug_on);
     distance = 47;
     pix_per_cm = 36.2;
     va_in_pix  = va2pix(distance,pix_per_cm);
-    Trans_mx_shift = [-10 -10];  # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
+    Trans_mx_shift       = [0 0];  # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
     
     fixation_target_deg = 0.75;      
     trackWin_deg = 1.3;
@@ -58,27 +58,27 @@ function BSD_image_flash(debug_on);
     gaze_position = nan*ones(2,FR*ceil((wait_fixation+max_fixation_duration)));
     TTLwidth = 0.15;
     
-    driveAP = 5.5;
-    driveML = 4;
+    driveAP = 4.00
+    driveML = 5.00;
     sex = 'M';
     DOB = nan;
     handler = 'SC';
     experimenters = 'SCMM'; 
-    weight = 431;
-    penetration_wait_time = 20;
-    penetration_time = 15;
+    weight = 439;   
+    penetration_wait_time = 10;
+    penetration_time = 10;
   
   elseif strcmp(animal,'Sansa')
     
     distance = 47;
     pix_per_cm = 36.2;
     va_in_pix  = va2pix(distance,pix_per_cm);
-    Trans_mx_shift = [35 -5];# a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
+    Trans_mx_shift  = [40 -20]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
     fill_fixation = 1;    
     black_white = 0;
     
-    fixation_target_deg = 1.2;#0.9;
-    trackWin_deg = 2;#1.3
+    fixation_target_deg = 0.8;
+    trackWin_deg = 1.3
    
     stimulus_size_deg = [16];
     edge_rolloff_deg  = 0.2;
@@ -96,7 +96,7 @@ function BSD_image_flash(debug_on);
     max_trs              = 10000;    
     max_fixation_duration    = 24;
     min_fixation_duration    = 0.1;
-    reward_scaler = 0.6;
+    reward_scaler = 0.5;
     FR = 120;    
     fix_point_Window_size = 100;
     trackMarkerColor = [255,0,0];
@@ -108,8 +108,8 @@ function BSD_image_flash(debug_on);
     sex = 'F';
     DOB = nan;
     handler = 'SC';
-    experimenters = 'SC'; 
-    weight = 457;
+    experimenters = 'SCLN'; 
+    weight = 479;   
     penetration_wait_time = nan;
     penetration_time = nan;
     
@@ -130,10 +130,7 @@ function BSD_image_flash(debug_on);
   #specificImage = [37,38,39,40];
   #specificImage = [41,42,43,44];
   #specificImage = [45,46,47,48];
-  #specificImage = [49,50,51,52];
-  #specificImage = [53,54,55,56];
-  #specificImage = [57,58,59,60];
-   specificImage = [61,62,63,64];
+   specificImage = [49,50,51,52];
   
   # raised cosine mask parameters  
   mask_grid = 962;

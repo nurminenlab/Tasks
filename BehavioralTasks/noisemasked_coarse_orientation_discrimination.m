@@ -10,7 +10,7 @@ mouse_track = 0;
 debug_on = 0;
 save_records = 1;
 
-animal = 'Wolfjaw';
+animal = 'Sansa';
 
 records_folder = '/home/vpixx/MonkeyRecords/TrialRecords/';
 saveSTR = [records_folder,animal,'/','noisemasked_coarse_orientation_discrimination-trial_records-',date,'.mat'];
@@ -30,11 +30,11 @@ if strcmp(animal,'Sansa')
   Trans_mx_shift = [35 -25]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
   
   % task parameters
-  fix_target_deg       = 2;
+  fix_target_deg       =2;
   fix_target_pix       = fix_target_deg*va_in_pixels;
   track_win_deg        = 3;
   track_win_pix        = track_win_deg*va_in_pixels;
-  d_target_extra       = 1.5;
+  d_target_extra       = 3;
   
   wait_fixation        = 1;
   rewardConsume_period = 2;
@@ -182,6 +182,9 @@ if ~mouse_track
   Scale_mx(1) = bx(2);
   Scale_mx(4) = by(2);
   Trans_mx = [bx(1)+Trans_mx_shift(1), by(1)+Trans_mx_shift(2)]';
+else
+  Scale_mx = eye(2);
+  Trans_mx = [0 0];
 end
 
 expt_info.Scale_mx = Scale_mx;

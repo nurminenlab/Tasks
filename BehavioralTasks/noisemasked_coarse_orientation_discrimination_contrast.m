@@ -29,14 +29,16 @@ va_in_pixels = va2pix(distance,pix_per_cm);
 
 if strcmp(animal,'Sansa')
   
-  Trans_mx_shift = [30 0];# a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
+  Trans_mx_shift = [30 -15];# a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
   
   % task parameters
-  fix_target_deg       = 1.8;
+  fix_target_deg       = 0.74;
   fix_target_pix       = fix_target_deg*va_in_pixels;
-  track_win_deg        = 3;
+  track_win_deg        = 1.5;
   track_win_pix        = track_win_deg*va_in_pixels;
   d_target_extra       = 2.5;
+  R_deg  = 4;
+  rotate_deg           = 0; # goal to use something close to 30, I hope
   
   wait_fixation        = 1;
   rewardConsume_period = 2;
@@ -44,58 +46,16 @@ if strcmp(animal,'Sansa')
   min_target_time      = 0.2;  
   gaze_move_time       = 0.4;
   response_wait_time   = gaze_move_time;
-  max_trs              = 10000;
-  wrong_target_abort = 1;
-  
-  gridSize = 100;
-  contrasts = [0.01 0.02 0.04 0.08 0.16 0.32];
-  contrasts_idx = [1 1 2 2 3 3 4 5 6]; # workaround for weighted randomization of contrast  
-  orientations = [0,90];
-  pix_per_period = 33;
-  plateau_deg = 1.5;
-  plateau_pix = plateau_deg*va_in_pixels;
-  edge_deg = 0.1;
-  edge_pix = edge_deg*va_in_pixels;  
-  d_target = (plateau_deg + edge_deg + d_target_extra)*va_in_pixels;
-  reward_scaler = 0.5;
-  animal_code = 'MM001';  
-  wrong_target_timeout = 0.5;
-  no_fixation_timeout = 1;
-  
-  driveAP = 4.0
-  driveML = 5.0;
-  sex = 'F';
-  DOB = nan;
-  handler = 'SC';
-  experimenters = 'SCLN'; 
-  weight = 421;   
-  penetration_wait_time = 30;
-  penetration_time = 10;
-  
-elseif strcmp(animal,'Wolfjaw')
-  
-  Trans_mx_shift = [-15 -30]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
-  
-  % task parameters
-  fix_target_deg       = 1.5; # fixation target size in degrees
-  fix_target_pix       = fix_target_deg*va_in_pixels;
-  track_win_deg        = 3; # blue ring around central fixation target
-  track_win_pix        = track_win_deg*va_in_pixels;
-  d_target_extra       = 2.5; # acceptance window for other targets
-  
-  wait_fixation        = 1; # wait fixation time until next trial offered
-  rewardConsume_period = 1; # time between trials
-  max_fixation_time    = 1.5; # length of time that the monkey can look at the larger target
-  min_target_time      = 0.1; # min fixation time to central target before giving answer; increase to 0.2 gradually
-  gaze_move_time       = 0.4; 
-  response_wait_time   = gaze_move_time;
+  max_reward_time      = 0.75;
   max_trs              = 10000;
   wrong_target_abort = 1;
   
   gridSize = 128;
-  contrasts = [0.02 0.04 0.08 0.16 0.32];
-  #contrasts = [0.16];
-  contrasts_idx = [1,1,2,2,3,3,4,5];# workaround for weighted randomization of contrast
+  #contrasts = [0.01 0.02 0.04 0.08 0.16 0.32];
+  #contrasts = [0.01 0.02 0.04 0.08 0.16 0.32];
+  contrasts = [0.04 0.08 0.16 0.32];
+  contrasts_idx = [1 2 3 4]; # workaround for weighted randomization of contrast  
+  #contrasts_idx = [1 1 2 3 4 5 6];
   orientations = [0,90];
   pix_per_period = 33;
   plateau_deg = 3;
@@ -103,20 +63,71 @@ elseif strcmp(animal,'Wolfjaw')
   edge_deg = 0.1;
   edge_pix = edge_deg*va_in_pixels;  
   d_target = (plateau_deg + edge_deg + d_target_extra)*va_in_pixels;
-  reward_scaler = 0.5;
+  reward_scaler = 0.53;
+  animal_code = 'MM001';  
+  wrong_target_timeout = 0.5;
+  no_fixation_timeout = 1;
+  
+  driveAP = nan;
+  driveML = nan;
+  sex = 'F';
+  DOB = nan;
+  handler = 'SC';
+  experimenters = 'SC'; 
+  weight = 463;   
+  penetration_wait_time = nan;
+  penetration_time = nan;
+  
+  
+elseif strcmp(animal,'Wolfjaw')
+  
+  Trans_mx_shift       = [0 0]; # a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
+  
+  % task parameters
+  fix_target_deg       = 1; # fixation target size in degrees
+  fix_target_pix       = fix_target_deg*va_in_pixels;
+  track_win_deg        = 2.25; # blue ring around central fixation target
+  track_win_pix        = track_win_deg*va_in_pixels;
+  d_target_extra       = 2.5; # acceptance window for other targets
+  R_deg  = 4;
+  rotate_deg           = 0;
+  
+  wait_fixation        = 1; # wait fixation time until next trial offered
+  rewardConsume_period = 1; # time between trials
+  max_fixation_time    = 1.5; # length of time that the monkey can look at the larger target
+  min_target_time      = 0.13; # min fixation time to central target before giving answer; increase to 0.2 gradually
+  gaze_move_time       = 0.4; 
+  response_wait_time   = gaze_move_time;
+  max_reward_time      = 1.45;
+  max_trs              = 10000;
+  wrong_target_abort = 1;
+  
+  gridSize = 128;
+  #contrasts = [0.02 0.04 0.08 0.16 0.32];
+  contrasts = [0.04 0.08 0.16 0.32];
+  #contrasts_idx = [1,1,2,2,3,3,4,5];# workaround for weighted randomization of contrast
+  contrasts_idx = [1 1 2 3 4];
+  orientations = [0,90];
+  pix_per_period = 33;
+  plateau_deg = 3;
+  plateau_pix = plateau_deg*va_in_pixels;
+  edge_deg = 0.1;
+  edge_pix = edge_deg*va_in_pixels;  
+  d_target = (plateau_deg + edge_deg + d_target_extra)*va_in_pixels;
+  reward_scaler = 0.6;
   animal_code = 'MM004';
   wrong_target_timeout = 0.5;
   no_fixation_timeout = 1;
   
-  driveAP = 4.0
-  driveML = 5.0;
+  driveAP = nan;
+  driveML = nan;
   sex = 'M';
   DOB = nan;
   handler = 'SC';
-  experimenters = 'SCLN'; 
-  weight = 421;   
-  penetration_wait_time = 30;
-  penetration_time = 10;
+  experimenters = 'SCMM'; 
+  weight = 429;   
+  penetration_wait_time = nan;
+  penetration_time = nan;
   
 else
 
@@ -125,8 +136,7 @@ else
 
 endif
 
-thetas_deg = [-45,45,135,225] + 0;
-R_deg  = 4;
+thetas_deg = [-45,45,135,225] + rotate_deg;
 thetas = deg2rad(thetas_deg);
 R      = va_in_pixels*R_deg;
 ms     = 10;
@@ -154,7 +164,9 @@ expt_info.plateau_deg          = plateau_deg;
 expt_info.edge_deg             = edge_deg;
 expt_info.reward_scaler        = reward_scaler;
 expt_info.wrong_target_timeout = wrong_target_timeout;
-expt_info. no_fixation_timeout = no_fixation_timeout;
+expt_info.no_fixation_timeout  = no_fixation_timeout;
+expt_info.max_reward_time      = max_reward_time;
+expt_info.rotate_deg           = rotate_deg;
 
 fix_point_Window_size = track_win_pix;
 trackMarkerColor = [255,0,0];
@@ -177,6 +189,9 @@ if ~mouse_track
   Scale_mx(1) = bx(2);
   Scale_mx(4) = by(2);
   Trans_mx = [bx(1)+Trans_mx_shift(1), by(1)+Trans_mx_shift(2)]';
+else
+  Scale_mx = eye(2);
+  Trans_mx = [0 0];
 end
 
 expt_info.Scale_mx = Scale_mx;
@@ -680,7 +695,7 @@ while is_running
     end
     
     # max length of trial
-    if toc(reward_time_clock) > 2
+    if toc(reward_time_clock) > max_reward_time
       reward_size_time = 0.4*sqrt((toc(reward_time_clock)));
       Datapixx('SetDoutValues', 1);
       Datapixx('RegWrRd');

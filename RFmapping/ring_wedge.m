@@ -8,7 +8,7 @@ function trial_records = ring_wedge(debug_on)
   # use mouse instead of eye tracker
   mouse_track = 0;
 
-  animal = 'Sansa';
+  animal = 'Wolfjaw';
   saveSTR = ['/home/vpixx/MonkeyRecords/TrialRecords/',animal,'/','RF-map-wedge-trial_records-',date,'.mat'];
   STR = ['/home/vpixx/MonkeyRecords/TrialRecords/',animal,'/','RF-map-wedge-trial_records-',date];
   save_append = 0;
@@ -21,18 +21,18 @@ function trial_records = ring_wedge(debug_on)
   if strcmp(animal,'Tully-')
     scaler = 0.6;
     
-  elseif strcmp(animal,'Sansa')
+  elseif strcmp(animal,'Wolfjaw')
     view_distance = 47;
     pix_per_cm = 36.2;
     va_in_pix  = va2pix(view_distance,pix_per_cm);
-    Trans_mx_shift = [30 -15];# a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels.
+    Trans_mx_shift = [-25 -30];# a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels.
     
     fixation_target_deg = 0.8;
-    trackWin_deg = 1.3; # diameter
-    ring_width_deg = 2;
-    ring_start_deg = 2;
-    ring_stop_deg  = 16;
-    wedge_angle = 20;
+    trackWin_deg = 1.8; # diameter
+    ring_width_deg = 0.35;
+    ring_start_deg = 1.3;
+    ring_stop_deg  = 2.875;
+    wedge_angle = 8.75;
     
     waitframes = 30;
     fill_fixation = 1;
@@ -47,6 +47,16 @@ function trial_records = ring_wedge(debug_on)
     FR = 120;    
     trackMarkerColor = [255,0,0];
     gaze_position = nan*ones(2,FR*ceil((wait_fixation+max_fixation_duration)));
+  
+    driveAP = 5.5;
+    driveML = 5.5;
+    sex = 'M';
+    DOB = nan;
+    handler = 'SC';
+    experimenters = 'SCMM'; 
+    weight = 422;
+    penetration_wait_time = 30;
+    penetration_time = 10;
   
   else
     fprintf('Strange animal \n');
@@ -69,6 +79,15 @@ function trial_records = ring_wedge(debug_on)
   expt_info.min_fixation_duration = min_fixation_duration;
   expt_info.reward_scaler = reward_scaler;
   expt_info.TTLwidth = TTLwidth;
+  
+  expt_info.driveAP = driveAP;
+  expt_info.driveML = driveML;
+  expt_info.sex     = sex;
+  expt_info.DOB     = DOB;
+  expt_info.handler = handler;
+  expt_info.experimenters = experimenters;
+  expt_info.weight  = weight;
+  
   if mouse_track
     XY = ones(2,1)*nan;
   end
@@ -127,19 +146,20 @@ function trial_records = ring_wedge(debug_on)
     fillStimulus = [track_centerX-square_size, track_centerY-square_size, track_centerX+square_size, track_centerY+square_size];
   else
     fillStimulus = [0 0 0 0];
-  end
-    
+  end    
   
-  wedge = 0:wedge_angle:180;
+  wedge = 0:wedge_angle/2:125;
   wedge = 180 + wedge;
   wedge = wedge(randperm(length(wedge)));
   
   wedgeCount = 1;
   ringCount = 1;
   
-  ring = ring_start_deg:ring_width_deg:ring_stop_deg;
-  ring = (va_in_pix*ring)/2; # /2 due to downstream    
-    
+  ring = ring_start_deg:ring_width_deg:ring_stop_deg;  
+  ring = (va_in_pix*ring)/2; # /2 due to downstream
+  
+  
+  
   % Load marmoset face
   stimulus_image = 'face10.jpg';
   theImage = imread(stimulus_image);
@@ -317,9 +337,8 @@ function trial_records = ring_wedge(debug_on)
         Screen('FrameOval',eyeTrack_window,[0 0 255],trackWindow_rect(:,:,pos),3,3); # to mark fixation window
           
         Screen('DrawTexture', stimulus_window, stimulus_imageTexture, [], rects(:,:,pos)); 
-        Screen('FillOval', stimulus_window, [128 128 128], [0 0 0 0]);
-        
-        turn = turn + 1;        
+        Screen('FillOval', stimulus_window, [128 128 128], [0 0 0 0]);     
+       
         
         vbl1 = Screen('Flip', stimulus_window);
         vbl2 = Screen('Flip', eyeTrack_window);
@@ -346,6 +365,8 @@ function trial_records = ring_wedge(debug_on)
             ringCount = ringCount + 1;
           end          
         end
+        
+        turn = turn + 1;
         
         break;
       end
@@ -421,9 +442,7 @@ function trial_records = ring_wedge(debug_on)
       Screen('DrawTexture', eyeTrack_window, eyeTrack_imageTexture, [], rects(:,:,pos));      
       Screen('FrameOval',eyeTrack_window,[0 0 255],trackWindow_rect(:,:,pos),3,3); # to mark fixation window
       
-      Screen('DrawTexture', stimulus_window, stimulus_imageTexture, [], rects(:,:,pos));
-      
-      turn = turn + 1;      
+      Screen('DrawTexture', stimulus_window, stimulus_imageTexture, [], rects(:,:,pos));               
       
       vbl1 = Screen('Flip', eyeTrack_window, vbl1 + (waitframes - 0.5) * ifi1);
       vbl2 = Screen('Flip', stimulus_window, vbl2 + (waitframes - 0.5) * ifi2);
@@ -450,6 +469,8 @@ function trial_records = ring_wedge(debug_on)
             ringCount = ringCount + 1;
           end          
       end
+      
+      turn = turn + 1;
       
       
       if sqrt((XY(1) - X(pos))^2 + (XY(2) - Y(pos))^2) >= trackWindow      
