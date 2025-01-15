@@ -18,14 +18,11 @@ function trial_records = ring_wedge(debug_on)
   end  
 
   % user defined parameters
-  if strcmp(animal,'Tully-')
-    scaler = 0.6;
-    
-  elseif strcmp(animal,'Wolfjaw')
+  if strcmp(animal,'Sansa')
     view_distance = 47;
     pix_per_cm = 36.2;
     va_in_pix  = va2pix(view_distance,pix_per_cm);
-    Trans_mx_shift = [-25 -30];# a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels.
+    Trans_mx_shift = [10 -10];# a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels.
     
     fixation_target_deg = 0.8;
     trackWin_deg = 1.8; # diameter
@@ -48,14 +45,51 @@ function trial_records = ring_wedge(debug_on)
     trackMarkerColor = [255,0,0];
     gaze_position = nan*ones(2,FR*ceil((wait_fixation+max_fixation_duration)));
   
-    driveAP = 5.5;
-    driveML = 5.5;
+    driveAP = 4.5;
+    driveML = 5;
+    sex = 'F';
+    DOB = nan;
+    handler = 'SC';
+    experimenters = 'SCMM'; 
+    weight = nan;
+    penetration_wait_time = 26;
+    penetration_time = 10;
+    
+  elseif strcmp(animal,'Wolfjaw')
+    view_distance = 47;
+    pix_per_cm = 36.2;
+    va_in_pix  = va2pix(view_distance,pix_per_cm);
+    Trans_mx_shift = [10 -10];# a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels.
+    
+    fixation_target_deg = 0.8;
+    trackWin_deg = 1.8; # diameter
+    ring_width_deg = 0.35;
+    ring_start_deg = 1.3;
+    ring_stop_deg  = 2.875;
+    wedge_angle = 8.75;
+    
+    waitframes = 30;
+    fill_fixation = 1;
+    TTLwidth = 0.015;
+    wait_fixation        = 0.75;
+    rewardConsume_period = 2;
+    ms                   = 10;    
+    max_trs              = 10000;    
+    max_fixation_duration = 120;
+    min_fixation_duration = 0.1;
+    reward_scaler = 0.5;
+    FR = 120;    
+    trackMarkerColor = [255,0,0];
+    gaze_position = nan*ones(2,FR*ceil((wait_fixation+max_fixation_duration)));
+  
+    driveAP = 4.5;
+    driveML = 5;
     sex = 'M';
     DOB = nan;
     handler = 'SC';
     experimenters = 'SCMM'; 
-    weight = 422;
-    penetration_wait_time = 30;
+    weight = 419;
+    penetration_wait_time = 26;
     penetration_time = 10;
   
   else

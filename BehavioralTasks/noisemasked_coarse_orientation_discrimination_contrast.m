@@ -13,7 +13,7 @@ mouse_track = 0;
 debug_on = 0;
 save_records = 1;
 
-animal = 'Wolfjaw';
+animal = 'Sansa';
 
 records_folder = '/home/vpixx/MonkeyRecords/TrialRecords/';
 saveSTR = [records_folder,animal,'/','noisemasked_coarse_orientation_discrimination-trial_records-',date,'.mat'];
@@ -29,16 +29,16 @@ va_in_pixels = va2pix(distance,pix_per_cm);
 
 if strcmp(animal,'Sansa')
   
-  Trans_mx_shift = [30 -15];# a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
+  Trans_mx_shift = [30 -5];# a manual offset to the translation matrix of the eye tracker calibration. DEF in pixels. 
   
   % task parameters
   fix_target_deg       = 0.74;
   fix_target_pix       = fix_target_deg*va_in_pixels;
   track_win_deg        = 1.5;
   track_win_pix        = track_win_deg*va_in_pixels;
-  d_target_extra       = 2.5;
-  R_deg  = 4;
-  rotate_deg           = 0; # goal to use something close to 30, I hope
+  d_target_extra       = 1.5;
+  R_deg  = 3;
+  rotate_deg           = 2; # goal to use something close to 30, I hope
   
   wait_fixation        = 1;
   rewardConsume_period = 2;

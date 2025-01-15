@@ -1,4 +1,4 @@
-  % prepare PsychoToolbox
+% prepare PsychoToolbox
 AssertOpenGL;
 sca;
 close all;
